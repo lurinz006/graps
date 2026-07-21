@@ -1,0 +1,14 @@
+# Root gitignore
+analytics/venv/
+analytics/__pycache__/
+analytics/src/__pycache__/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.DS_Store
+.vscode/
+.idea/
+*.pyc
+*~

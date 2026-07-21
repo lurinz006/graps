@@ -1,0 +1,73 @@
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+
+
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #020617;
+    /* slate-950 */
+    color: #f8fafc;
+    /* slate-50 */
+  }
+
+  /* Custom Scrollbar for modern look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #020617;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+
+  /* Mapbox popup premium styling override */
+  .mapboxgl-popup-content {
+    background: #0B1120 !important;
+    color: #f8fafc !important;
+    border: 1px solid #2D3748 !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5) !important;
+    padding: 0 !important; /* padding handled by tailwind in the component */
+    overflow: hidden;
+  }
+
+  .mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+    border-bottom-color: #2D3748 !important;
+  }
+
+  .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+    border-top-color: #2D3748 !important;
+  }
+
+  .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+    border-right-color: #2D3748 !important;
+  }
+
+  .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+    border-left-color: #2D3748 !important;
+  }
+
+  .mapboxgl-close-button {
+    color: #A0AEC0 !important;
+    font-size: 16px !important;
+    right: 8px !important;
+    top: 6px !important;
+    z-index: 50;
+  }
