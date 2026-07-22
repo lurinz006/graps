@@ -8,7 +8,9 @@ export default function SettingsPanel({
   setClearConfirmStep,
   handleClearDatabase,
   dashboardViewMode,
-  updateDashboardViewMode
+  updateDashboardViewMode,
+  theme,
+  setTheme
 }) {
   const [settingsTab, setSettingsTab] = useState('profile');
 
@@ -23,7 +25,6 @@ export default function SettingsPanel({
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // Preference states
-  const [theme, setTheme] = useState('slate-dark');
   const [refreshInterval, setRefreshInterval] = useState('none');
   const [coordFormat, setCoordFormat] = useState('DD');
 
@@ -251,17 +252,17 @@ export default function SettingsPanel({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-850">
                   <div className="space-y-0.5">
                     <span className="font-semibold text-slate-350 block">Theme Scheme</span>
-                    <span className="text-[10px] text-slate-500">Select visual palette for map and panel components</span>
+                    <span className="text-[10px] text-slate-500">Select visual theme for map and panel components</span>
                   </div>
                   <div className="flex gap-2">
-                    {['slate-dark', 'midnight-blue', 'emerald-dark'].map((t) => (
+                    {['dark', 'light'].map((t) => (
                       <button
                         key={t}
-                        onClick={() => { setTheme(t); triggerToast(`Theme updated to ${t.replace('-', ' ')}.`); }}
+                        onClick={() => { setTheme(t); triggerToast(`Theme updated to ${t} mode.`); }}
                         className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${theme === t ? 'bg-brand-600 text-slate-50 border-brand-500/20' : 'text-slate-400 border-slate-850 hover:border-slate-700'
                           }`}
                       >
-                        {t === 'slate-dark' ? 'Slate' : t === 'midnight-blue' ? 'Midnight' : 'Emerald'}
+                        {t === 'dark' ? 'Dark Mode' : 'Light Mode'}
                       </button>
                     ))}
                   </div>

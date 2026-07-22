@@ -28,7 +28,9 @@ import {
   Activity,
   Bell,
   BarChart3,
-  Star
+  Star,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 const INITIAL_POINTS = [];
@@ -37,6 +39,17 @@ export default function App() {
   const [points, setPoints] = useState([]);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [dbStatus, setDbStatus] = useState("Loading...");
+  const [theme, setTheme] = useState(() => localStorage.getItem('graps_theme') || 'dark');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+    }
+    localStorage.setItem('graps_theme', theme);
+  }, [theme]);
 
   // Tab control — persisted across reloads
   const [activeTab, setActiveTabRaw] = useState(() => localStorage.getItem('graps_activeTab') || 'dashboard');
@@ -614,6 +627,8 @@ export default function App() {
             handleClearDatabase={handleClearDatabase}
             dashboardViewMode={dashboardViewMode}
             updateDashboardViewMode={updateDashboardViewMode}
+            theme={theme}
+            setTheme={setTheme}
           />
         );
       case 'incidents':
@@ -892,6 +907,15 @@ export default function App() {
             </span>
           </div>
 
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              title={theme === 'light' ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              className="p-2.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 transition-all cursor-pointer shadow flex items-center justify-center outline-none focus:ring-1 focus:ring-brand-500"
+            >
+              {theme === 'light' ? <Moon size={15} className="fill-slate-400/20" /> : <Sun size={15} className="fill-brand-500/10 text-brand-400" />}
+            </button>
+          </div>
         </header>
 
         {/* 📑 Tab Selection Rendering */}
@@ -1059,7 +1083,7 @@ export default function App() {
 
               {/* Map Canvas (Takes 100% of Space, receives filtered points for performant rendering) */}
               <div className="flex-1 w-full h-full">
-                <MapContainer points={filteredPoints} onAddPoint={!isChief ? handleAddPoint : undefined} onDeletePoint={handleDeleteIncident} barangayList={barangayList} focusLocation={mapFocus} />
+                <MapContainer points={filteredPoints} onAddPoint={!isChief ? handleAddPoint : undefined} onDeletePoint={handleDeleteIncident} barangayList={barangayList} focusLocation={mapFocus} theme={theme} />
               </div>
 
               {/* 🛠️ Sliding Right Drawer (ML Engine & Node List) */}

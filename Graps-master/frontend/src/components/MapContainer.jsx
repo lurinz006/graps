@@ -112,7 +112,7 @@ function FitAllButton({ points }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function MapContainer({ points = [], onAddPoint, onDeletePoint, barangayList = [], focusLocation = null }) {
+export default function MapContainer({ points = [], onAddPoint, onDeletePoint, barangayList = [], focusLocation = null, theme = 'dark' }) {
   const [showPins, setShowPins] = useState(INITIAL_VIEWPORT.zoom >= 12);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [pendingClickCoords, setPendingClickCoords] = useState(null);
@@ -336,7 +336,7 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
             setShowPins(isZoomed);
           }
         }}
-        mapStyle="mapbox://styles/mapbox/dark-v11"
+        mapStyle={theme === 'light' ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11"}
         onClick={handleMapClick}
         interactiveLayerIds={['points-layer']}
         cursor="crosshair"
