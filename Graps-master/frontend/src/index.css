@@ -4,6 +4,43 @@
   @tailwind components;
   @tailwind utilities;
 
+  :root {
+    --color-slate-50: 248 250 252;
+    --color-slate-100: 241 245 249;
+    --color-slate-150: 234 239 245;
+    --color-slate-200: 226 232 240;
+    --color-slate-300: 203 213 225;
+    --color-slate-350: 175 188 205;
+    --color-slate-400: 148 163 184;
+    --color-slate-455: 124 140 162;
+    --color-slate-500: 100 116 139;
+    --color-slate-550: 85 100 125;
+    --color-slate-600: 71 85 105;
+    --color-slate-700: 51 65 85;
+    --color-slate-800: 30 41 59;
+    --color-slate-850: 30 41 59;
+    --color-slate-900: 15 23 42;
+    --color-slate-950: 2 6 23;
+  }
+
+  .light {
+    --color-slate-50: 2 6 23;
+    --color-slate-100: 15 23 42;
+    --color-slate-150: 22 30 49;
+    --color-slate-200: 30 41 59;
+    --color-slate-300: 51 65 85;
+    --color-slate-350: 61 75 97;
+    --color-slate-400: 71 85 105;
+    --color-slate-455: 85 100 125;
+    --color-slate-500: 100 116 139;
+    --color-slate-550: 124 140 162;
+    --color-slate-600: 203 213 225;
+    --color-slate-700: 226 232 240;
+    --color-slate-800: 241 245 249;
+    --color-slate-850: 226 232 240;
+    --color-slate-900: 255 255 255;
+    --color-slate-950: 248 250 252;
+  }
 
   body {
     margin: 0;
@@ -12,10 +49,9 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #020617;
-    /* slate-950 */
-    color: #f8fafc;
-    /* slate-50 */
+    background-color: rgb(var(--color-slate-950));
+    color: rgb(var(--color-slate-50));
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* Custom Scrollbar for modern look */
@@ -25,23 +61,23 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #020617;
+    background: rgb(var(--color-slate-950));
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: rgb(var(--color-slate-800));
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: rgb(var(--color-slate-700));
   }
 
   /* Mapbox popup premium styling override */
   .mapboxgl-popup-content {
-    background: #0B1120 !important;
-    color: #f8fafc !important;
-    border: 1px solid #2D3748 !important;
+    background: rgb(var(--color-slate-900)) !important;
+    color: rgb(var(--color-slate-50)) !important;
+    border: 1px solid rgb(var(--color-slate-800)) !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5) !important;
     padding: 0 !important; /* padding handled by tailwind in the component */
@@ -49,25 +85,56 @@
   }
 
   .mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
-    border-bottom-color: #2D3748 !important;
+    border-bottom-color: rgb(var(--color-slate-800)) !important;
   }
 
   .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
-    border-top-color: #2D3748 !important;
+    border-top-color: rgb(var(--color-slate-800)) !important;
   }
 
   .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-    border-right-color: #2D3748 !important;
+    border-right-color: rgb(var(--color-slate-800)) !important;
   }
 
   .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: #2D3748 !important;
+    border-left-color: rgb(var(--color-slate-800)) !important;
   }
 
   .mapboxgl-close-button {
-    color: #A0AEC0 !important;
+    color: rgb(var(--color-slate-400)) !important;
     font-size: 16px !important;
     right: 8px !important;
     top: 6px !important;
     z-index: 50;
+  }
+
+  /* Prevent text color inversion on elements with persistent dark brand backgrounds in light mode */
+  .light .bg-brand-600,
+  .light .hover\:bg-brand-600:hover,
+  .light .bg-brand-500,
+  .light .hover\:bg-brand-500:hover,
+  .light .bg-rose-600,
+  .light .hover\:bg-rose-600:hover,
+  .light .bg-rose-500,
+  .light .hover\:bg-rose-500:hover,
+  .light .bg-violet-600,
+  .light .hover\:bg-violet-600:hover,
+  .light .bg-violet-500,
+  .light .hover\:bg-violet-500:hover,
+  .light .bg-emerald-600,
+  .light .hover\:bg-emerald-600:hover,
+  .light .bg-emerald-500,
+  .light .hover\:bg-emerald-500:hover {
+    color: #f8fafc !important;
+  }
+
+  .light .bg-brand-600 *,
+  .light .hover\:bg-brand-600:hover *,
+  .light .bg-rose-600 *,
+  .light .hover\:bg-rose-600:hover *,
+  .light .bg-violet-600 *,
+  .light .hover\:bg-violet-600:hover *,
+  .light .bg-emerald-600 *,
+  .light .hover\:bg-emerald-600:hover * {
+    color: inherit !important;
   }

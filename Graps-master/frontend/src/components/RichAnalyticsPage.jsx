@@ -255,11 +255,11 @@ export default function RichAnalyticsPage() {
           <div className="h-64 mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlyDataFormatted} margin={{ left: -15, right: 10, top: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                <YAxis stroke="#475569" fontSize={9} />
-                <Tooltip contentStyle={{ backgroundColor: '#0d1228', borderColor: '#1e293b', borderRadius: '10px' }} />
-                <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', color: '#94a3b8' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-slate-800))" />
+                <XAxis dataKey="name" stroke="rgb(var(--color-slate-400))" fontSize={9} />
+                <YAxis stroke="rgb(var(--color-slate-400))" fontSize={9} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgb(var(--color-slate-900))', borderColor: 'rgb(var(--color-slate-800))', borderRadius: '10px' }} labelStyle={{ color: 'rgb(var(--color-slate-100))' }} itemStyle={{ color: 'rgb(var(--color-slate-300))' }} />
+                <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', color: 'rgb(var(--color-slate-400))' }} />
                 <Line type="monotone" dataKey="Actual" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="Forecast" stroke="#8b5cf6" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} connectNulls />
               </LineChart>
@@ -271,15 +271,15 @@ export default function RichAnalyticsPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between">
           <div>
             <h3 className="text-xs font-bold text-slate-350 uppercase tracking-wider mb-1">24-Hour Crime Distribution Peaks</h3>
-            <p className="text-[10px] text-slate-500">Aggregates hourly incident counts (red bars represent peak crime activity)</p>
+            <p className="text-[10px] text-slate-550">Aggregates hourly incident counts (red bars represent peak crime activity)</p>
           </div>
           <div className="h-64 mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyDataFormatted} margin={{ left: -15, right: 10, top: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="name" stroke="#475569" fontSize={8} interval={2} />
-                <YAxis stroke="#475569" fontSize={9} />
-                <Tooltip contentStyle={{ backgroundColor: '#0d1228', borderColor: '#1e293b', borderRadius: '10px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-slate-800))" />
+                <XAxis dataKey="name" stroke="rgb(var(--color-slate-400))" fontSize={8} interval={2} />
+                <YAxis stroke="rgb(var(--color-slate-400))" fontSize={9} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgb(var(--color-slate-900))', borderColor: 'rgb(var(--color-slate-800))', borderRadius: '10px' }} labelStyle={{ color: 'rgb(var(--color-slate-100))' }} itemStyle={{ color: 'rgb(var(--color-slate-300))' }} />
                 <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                   {hourlyDataFormatted.map((entry, idx) => (
                     <Cell key={`cell-${idx}`} fill={entry.fill} />
@@ -299,16 +299,16 @@ export default function RichAnalyticsPage() {
         <div className="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
           <div>
             <h3 className="text-xs font-bold text-slate-350 uppercase tracking-wider mb-1">Multiple Linear Regression Density (Geospatial)</h3>
-            <p className="text-[10px] text-slate-500">Plots actual incident count against model predicted risk score per barangay (Dashed red line represents Perfect Fit)</p>
+            <p className="text-[10px] text-slate-550">Plots actual incident count against model predicted risk score per barangay (Dashed red line represents Perfect Fit)</p>
           </div>
           <div className="h-72 mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ left: -15, right: 15, top: 10, bottom: 5 }}>
-                <CartesianGrid stroke="#1e293b" />
-                <XAxis type="number" dataKey="x" name="Actual Incidents" stroke="#475569" fontSize={9} />
-                <YAxis type="number" dataKey="y" name="Predicted Risk" stroke="#475569" fontSize={9} />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: '#0d1228', borderColor: '#1e293b', borderRadius: '10px' }} />
-                <ReferenceLine x={0} y={0} stroke="#94a3b8" />
+                <CartesianGrid stroke="rgb(var(--color-slate-800))" />
+                <XAxis type="number" dataKey="x" name="Actual Incidents" stroke="rgb(var(--color-slate-400))" fontSize={9} />
+                <YAxis type="number" dataKey="y" name="Predicted Risk" stroke="rgb(var(--color-slate-400))" fontSize={9} />
+                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'rgb(var(--color-slate-900))', borderColor: 'rgb(var(--color-slate-800))', borderRadius: '10px' }} labelStyle={{ color: 'rgb(var(--color-slate-100))' }} itemStyle={{ color: 'rgb(var(--color-slate-300))' }} />
+                <ReferenceLine x={0} y={0} stroke="rgb(var(--color-slate-400))" />
                 <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 50, y: 50 }]} stroke="#ef4444" strokeDasharray="5 5" strokeWidth={2} label={{ value: 'Perfect Fit', position: 'top', fill: '#ef4444', fontSize: 9 }} />
                 <Scatter name="Barangay Coordinate Node" data={regressionDataFormatted} fill="#3b82f6" shape="circle" />
               </ScatterChart>
