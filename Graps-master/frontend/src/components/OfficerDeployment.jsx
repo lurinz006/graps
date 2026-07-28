@@ -19,7 +19,7 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
   const [filterMonthLocal, setFilterMonthLocal] = useState(() => {
     return (filterMonth && filterMonth !== 'all')
       ? filterMonth
-      : new Date().toLocaleString('en-US', { month: 'short' });
+      : 'all';
   });
 
   const [sortField, setSortField] = useState('incidents');
@@ -931,7 +931,7 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
                 </thead>
                 <tbody className="divide-y divide-slate-850/30 text-xs">
                   {matrixBarangays.map((b) => {
-                    const total = b.officers;
+                    const total = b.officers > 0 ? b.officers : Math.max(2, Math.floor(b.incidents / 15));
                     const isCritOrHigh = b.risk === 'Critical' || b.risk === 'High';
 
                     return (

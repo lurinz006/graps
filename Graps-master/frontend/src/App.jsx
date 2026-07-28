@@ -35,6 +35,19 @@ import {
 
 const INITIAL_POINTS = [];
 
+// Helper to normalize different variations of Barangay names (e.g. Zone 1 vs Zone I, Zone 2 vs Zone II)
+const normalizeBarangayName = (name) => {
+  if (!name || name === 'Unassigned' || name === 'N/A') return '';
+  const cleaned = name.trim().toLowerCase();
+  
+  if (cleaned === 'zone 1' || cleaned === 'zone i' || cleaned === 'barangay zone 1' || cleaned === 'barangay zone i' || cleaned === 'brgy zone 1' || cleaned === 'brgy zone i' || cleaned === 'barangay zone i (pob.)' || cleaned === 'zone i (pob.)') return 'Barangay Zone I';
+  if (cleaned === 'zone 2' || cleaned === 'zone ii' || cleaned === 'barangay zone 2' || cleaned === 'barangay zone ii' || cleaned === 'brgy zone 2' || cleaned === 'brgy zone ii' || cleaned === 'barangay zone ii (pob.)' || cleaned === 'zone ii (pob.)') return 'Barangay Zone II';
+  if (cleaned === 'zone 3' || cleaned === 'zone iii' || cleaned === 'barangay zone 3' || cleaned === 'barangay zone iii' || cleaned === 'brgy zone 3' || cleaned === 'brgy zone iii' || cleaned === 'barangay zone iii (pob.)' || cleaned === 'zone iii (pob.)') return 'Barangay Zone III';
+  if (cleaned === 'zone 4' || cleaned === 'zone iv' || cleaned === 'barangay zone 4' || cleaned === 'barangay zone iv' || cleaned === 'brgy zone 4' || cleaned === 'brgy zone iv' || cleaned === 'barangay zone iv (pob.)' || cleaned === 'zone iv (pob.)') return 'Barangay Zone IV';
+
+  return name.trim();
+};
+
 export default function App() {
   const [points, setPoints] = useState([]);
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -91,6 +104,7 @@ export default function App() {
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterTime, setFilterTime] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
+  const [filterBarangay, setFilterBarangay] = useState('all');
 
   // Map Filter draft states (bound to UI controls)
   const [draftCategory, setDraftCategory] = useState('incident');
@@ -99,6 +113,7 @@ export default function App() {
   const [draftMonth, setDraftMonth] = useState('all');
   const [draftTime, setDraftTime] = useState('all');
   const [draftSeverity, setDraftSeverity] = useState('all');
+  const [draftBarangay, setDraftBarangay] = useState('all');
 
   // Check if draft states differ from currently applied filters
   const hasFilterChanges = useMemo(() => {
@@ -107,8 +122,9 @@ export default function App() {
       draftYear !== filterYear ||
       draftMonth !== filterMonth ||
       draftTime !== filterTime ||
-      draftSeverity !== filterSeverity;
-  }, [draftCategory, filterCategory, draftSubtype, filterSubtype, draftYear, filterYear, draftMonth, filterMonth, draftTime, filterTime, draftSeverity, filterSeverity]);
+      draftSeverity !== filterSeverity ||
+      draftBarangay !== filterBarangay;
+  }, [draftCategory, filterCategory, draftSubtype, filterSubtype, draftYear, filterYear, draftMonth, filterMonth, draftTime, filterTime, draftSeverity, filterSeverity, draftBarangay, filterBarangay]);
 
   const handleApplyFilters = () => {
     setFilterCategory(draftCategory);
@@ -117,6 +133,12 @@ export default function App() {
     setFilterMonth(draftMonth);
     setFilterTime(draftTime);
     setFilterSeverity(draftSeverity);
+    setFilterBarangay(draftBarangay);
+    if (draftBarangay !== 'all') {
+      setMapFocus(draftBarangay);
+    } else if (filterBarangay !== 'all') {
+      setMapFocus(null);
+    }
   };
 
   const handleResetFilters = () => {
@@ -126,12 +148,15 @@ export default function App() {
     setDraftMonth('all');
     setDraftTime('all');
     setDraftSeverity('all');
+    setDraftBarangay('all');
     setFilterCategory('incident');
     setFilterSubtype('all');
     setFilterYear('2025');
     setFilterMonth('all');
     setFilterTime('all');
     setFilterSeverity('all');
+    setFilterBarangay('all');
+    setMapFocus(null);
   };
 
   // Dashboard Settings View Scope State — persisted to localStorage
@@ -206,6 +231,69 @@ export default function App() {
     return null;
   };
 
+  // Reusable filter evaluation for both map pins and right-side statistics
+  const evaluateFilters = (p, { category, subtype, year, month, time, severity }) => {
+    const type = p.incident_type || p.name || '';
+    const lowerType = type.toLowerCase();
+
+    // 1. Category
+    if (category !== 'all') {
+      const isOperation = lowerType.includes('(operation)') ||
+        lowerType.includes('operation') ||
+        lowerType.includes('buy bust') ||
+        lowerType.includes('pdea') ||
+        lowerType.includes('check point') ||
+        lowerType.includes('search warrant') ||
+        lowerType.includes('entrapment') ||
+        lowerType.includes('interdiction');
+      if (category === 'incident' && isOperation) return false;
+      if (category === 'operation' && !isOperation) return false;
+    }
+
+    // 2. Subtype
+    if (subtype !== 'all') {
+      if (subtype === 'vehicular' && !lowerType.includes('vehicular accident')) return false;
+      if (subtype === 'vawc' && !lowerType.includes('violence against women')) return false;
+      if (subtype === 'theft' && !(lowerType.includes('theft') || lowerType.includes('robbery'))) return false;
+      if (subtype === 'injury' && !(lowerType.includes('physical injury') || lowerType.includes('mauling') || lowerType.includes('stabbing'))) return false;
+      if (subtype === 'drugs' && !lowerType.includes('buy bust')) return false;
+      if (subtype === 'gambling' && !lowerType.includes('gambling')) return false;
+    }
+
+    // 3. Year
+    if (year !== 'all') {
+      const pYear = getYearFromDate(p.date_committed);
+      if (pYear !== year) return false;
+    }
+
+    // 4. Month
+    if (month !== 'all') {
+      const monthVal = (p.monthly && p.monthly !== 'N/A') ? p.monthly : (getMonthFromDate(p.date_committed) || '');
+      if (monthVal.toLowerCase() !== month.toLowerCase()) return false;
+    }
+
+    // 5. Time of Day
+    if (time !== 'all') {
+      if (!p.time_committed || p.time_committed === 'N/A') return false;
+      const hour = parseInt(p.time_committed.split(':')[0]);
+      if (isNaN(hour)) return false;
+      if (time === 'morning' && (hour < 6 || hour >= 12)) return false;
+      if (time === 'afternoon' && (hour < 12 || hour >= 18)) return false;
+      if (time === 'night' && (hour >= 6 && hour < 18)) return false;
+    }
+
+    // 6. Severity
+    if (severity !== 'all') {
+      const val = p.value || 0;
+      if (severity === 'Critical' && val < 100) return false;
+      if (severity === 'High' && (val < 50 || val >= 100)) return false;
+      if (severity === 'Medium' && (val < 25 || val >= 50)) return false;
+      if (severity === 'Low' && val >= 25) return false;
+    }
+
+    return true;
+  };
+
   // Extract unique years dynamically from the dataset
   const uniqueYears = useMemo(() => {
     const years = new Set();
@@ -218,79 +306,127 @@ export default function App() {
     return Array.from(years).sort();
   }, [points]);
 
+  // Compute the center (average coordinates) of each barangay's points to filter out GPS typos
+  const brgyClusterCenters = useMemo(() => {
+    const sums = {};
+    points.forEach(p => {
+      const lat = parseFloat(p.latitude);
+      const lng = parseFloat(p.longitude);
+      const brgy = normalizeBarangayName(p.barangay || '').toUpperCase();
+      if (!brgy || isNaN(lat) || isNaN(lng) || lat > 7.5 || lat < 6.8 || lng < 121.8 || lng > 122.5) return;
+      if (!sums[brgy]) sums[brgy] = { latSum: 0, lngSum: 0, count: 0 };
+      sums[brgy].latSum += lat;
+      sums[brgy].lngSum += lng;
+      sums[brgy].count += 1;
+    });
+    const centers = {};
+    Object.keys(sums).forEach(brgy => {
+      centers[brgy] = {
+        lat: sums[brgy].latSum / sums[brgy].count,
+        lng: sums[brgy].lngSum / sums[brgy].count
+      };
+    });
+    return centers;
+  }, [points]);
+
   // Filter coordinate points dynamically based on real CSV incidentType values
   const filteredPoints = useMemo(() => {
     return points.filter(p => {
-      // 0. Filter Outliers (Coordinates outside Zamboanga City)
+      // 0. Filter Outliers (Coordinates outside Zamboanga City or GPS typos far from barangay center)
       const lat = parseFloat(p.latitude);
-      if (!isNaN(lat) && lat > 7.4) return false;
+      const lng = parseFloat(p.longitude);
+      if (isNaN(lat) || isNaN(lng) || lat > 7.5 || lat < 6.8 || lng < 121.8 || lng > 122.5) return false;
 
-      const type = p.incident_type || p.name || ''; // contains the incidentType, e.g. "(Incident) Vehicular Accident"
-
-      // 1. Filter Category (Incidents vs Operations)
-      const lowerType = type.toLowerCase();
-      const isOperation = lowerType.includes('(operation)') ||
-        lowerType.includes('operation') ||
-        lowerType.includes('buy bust') ||
-        lowerType.includes('pdea') ||
-        lowerType.includes('check point') ||
-        lowerType.includes('search warrant') ||
-        lowerType.includes('entrapment') ||
-        lowerType.includes('interdiction');
-
-      if (filterCategory === 'incident' && isOperation) return false;
-      if (filterCategory === 'operation' && !isOperation) return false;
-
-      // 2. Filter Subtype
-      if (filterSubtype !== 'all') {
-        const lowerType = type.toLowerCase();
-        if (filterSubtype === 'vehicular' && !lowerType.includes('vehicular accident')) return false;
-        if (filterSubtype === 'vawc' && !lowerType.includes('violence against women')) return false;
-        if (filterSubtype === 'theft' && !(lowerType.includes('theft') || lowerType.includes('robbery'))) return false;
-        if (filterSubtype === 'injury' && !(lowerType.includes('physical injury') || lowerType.includes('mauling') || lowerType.includes('stabbing'))) return false;
-        if (filterSubtype === 'drugs' && !lowerType.includes('buy bust')) return false;
-        if (filterSubtype === 'gambling' && !lowerType.includes('gambling')) return false;
+      // Filter out erroneous coordinate typos that are > ~6.5 km from the average cluster of that specific barangay
+      const brgyKey = normalizeBarangayName(p.barangay || '').toUpperCase();
+      const center = brgyClusterCenters[brgyKey];
+      if (center) {
+        const latDiff = Math.abs(lat - center.lat);
+        const lngDiff = Math.abs(lng - center.lng);
+        if (latDiff > 0.058 || lngDiff > 0.058) return false;
       }
 
-      // 3. Filter Year
-      if (filterYear !== 'all') {
-        const year = getYearFromDate(p.date_committed);
-        if (year !== filterYear) return false;
-      }
+      if (!evaluateFilters(p, {
+        category: filterCategory,
+        subtype: filterSubtype,
+        year: filterYear,
+        month: filterMonth,
+        time: filterTime,
+        severity: filterSeverity
+      })) return false;
 
-      // 4. Filter Month
-      if (filterMonth !== 'all') {
-        const monthVal = (p.monthly && p.monthly !== 'N/A') ? p.monthly : (getMonthFromDate(p.date_committed) || '');
-        if (monthVal.toLowerCase() !== filterMonth.toLowerCase()) return false;
-      }
-
-      // 5. Filter Time of Day
-      if (filterTime !== 'all') {
-        if (!p.time_committed || p.time_committed === 'N/A') return false;
-        const hour = parseInt(p.time_committed.split(':')[0]);
-        if (isNaN(hour)) return false;
-
-        if (filterTime === 'morning') {
-          if (hour < 6 || hour >= 12) return false;
-        } else if (filterTime === 'afternoon') {
-          if (hour < 12 || hour >= 18) return false;
-        } else if (filterTime === 'night') {
-          if (hour >= 6 && hour < 18) return false;
-        }
-      }
-
-      // 6. Filter Severity
-      if (filterSeverity !== 'all') {
-        const val = p.value || 0;
-        if (filterSeverity === 'Critical' && val < 100) return false;
-        if (filterSeverity === 'High' && (val < 50 || val >= 100)) return false;
-        if (filterSeverity === 'Medium' && (val < 25 || val >= 50)) return false;
-        if (filterSeverity === 'Low' && val >= 25) return false;
+      // 7. Filter Barangay
+      if (filterBarangay !== 'all') {
+        const brgy = normalizeBarangayName(p.barangay || p.location || p.address || '');
+        if (brgy.toLowerCase() !== normalizeBarangayName(filterBarangay).toLowerCase()) return false;
       }
 
       return true;
     });
-  }, [points, filterCategory, filterSubtype, filterYear, filterMonth, filterTime, filterSeverity]);
+  }, [points, filterCategory, filterSubtype, filterYear, filterMonth, filterTime, filterSeverity, filterBarangay, barangayList, brgyClusterCenters]);
+
+  const uniqueBarangays = useMemo(() => {
+    const namesObj = {};
+    const formatTitle = (str) => {
+      const norm = normalizeBarangayName(str);
+      return norm.trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    };
+    barangayList.forEach(b => {
+      if (b.name) {
+        const norm = normalizeBarangayName(b.name);
+        namesObj[norm.trim().toUpperCase()] = formatTitle(norm);
+      }
+    });
+    points.forEach(p => {
+      if (p.barangay && p.barangay !== 'Unassigned' && p.barangay !== 'N/A') {
+        const norm = normalizeBarangayName(p.barangay);
+        const key = norm.trim().toUpperCase();
+        if (!namesObj[key]) {
+          namesObj[key] = formatTitle(norm);
+        }
+      }
+    });
+    return Object.values(namesObj).sort();
+  }, [barangayList, points]);
+
+  const draftBrgyStats = useMemo(() => {
+    if (draftBarangay === 'all') return null;
+    const count = points.filter(p => {
+      const brgy = normalizeBarangayName(p.barangay || p.location || '').toLowerCase();
+      if (brgy !== normalizeBarangayName(draftBarangay).toLowerCase()) return false;
+      return evaluateFilters(p, {
+        category: draftCategory,
+        subtype: draftSubtype,
+        year: draftYear,
+        month: draftMonth,
+        time: draftTime,
+        severity: draftSeverity
+      });
+    }).length;
+    let risk = 'Low';
+    let badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    let icon = '🟢';
+
+    const isSingleYear = draftYear !== 'all';
+    const criticalThresh = isSingleYear ? 25 : 75;
+    const highThresh = isSingleYear ? 15 : 50;
+    const modThresh = isSingleYear ? 5 : 25;
+
+    if (count >= criticalThresh) {
+      risk = 'Critical';
+      badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      icon = '🔴';
+    } else if (count >= highThresh) {
+      risk = 'High';
+      badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      icon = '🟠';
+    } else if (count >= modThresh) {
+      risk = 'Moderate';
+      badgeClass = 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      icon = '🟡';
+    }
+    return { count, risk, badgeClass, icon };
+  }, [draftBarangay, draftCategory, draftSubtype, draftYear, draftMonth, draftTime, draftSeverity, points]);
 
   // RBAC Authentication State with local storage persistence
   const [user, setUser] = useState(() => {
@@ -301,8 +437,8 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Load incidents from local PostgreSQL DB on mount
-  const loadPointsFromDB = () => {
+  // Load incidents from local PostgreSQL DB on mount (with auto-reconnect)
+  const loadPointsFromDB = (isRetry = false) => {
     fetch('http://localhost:8000/api/v1/spatial-data')
       .then(res => {
         if (!res.ok) throw new Error("API response error");
@@ -327,12 +463,19 @@ export default function App() {
           }));
           setPoints(mapped);
           setDbStatus("Local PG Connected");
+          if (isRetry) {
+            fetchBarangays();
+            fetchUnackedAlertsCount();
+          }
         }
       })
       .catch(() => {
-        console.log("Laravel server offline. Falling back to local mockup data.");
-        setPoints(INITIAL_POINTS);
-        setDbStatus("Mock Fallback");
+        console.log("Laravel server offline or starting up. Retrying in 3 seconds...");
+        if (!isRetry) {
+          setPoints(INITIAL_POINTS);
+        }
+        setDbStatus("Reconnecting to PG...");
+        setTimeout(() => loadPointsFromDB(true), 3000);
       });
   };
 
@@ -438,11 +581,13 @@ export default function App() {
       .then(() => {
         setPoints([]);
         setClearConfirmStep(0);
+        alert("Database successfully cleared!");
       })
       .catch(() => {
         // Even if backend fails, clear local state
         setPoints([]);
         setClearConfirmStep(0);
+        alert("Local map points cleared, but there was an issue reaching the server.");
       });
   };
 
@@ -652,22 +797,23 @@ export default function App() {
     if (dashboardPoints.length === 0) {
       return { criticalZones: 0, sectors: 0, officers: 0 };
     }
-    
+
     // Count incidents per barangay
     const counts = {};
     dashboardPoints.forEach(p => {
       if (p.barangay && p.barangay !== 'N/A' && p.barangay !== 'Unassigned') {
-        counts[p.barangay] = (counts[p.barangay] || 0) + 1;
+        const norm = normalizeBarangayName(p.barangay);
+        counts[norm] = (counts[norm] || 0) + 1;
       }
     });
-    
+
     const activeBarangays = Object.keys(counts).length;
-    
+
     // Critical zones: Barangays with significantly higher than average incidents
     const values = Object.values(counts);
     const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
     const critical = values.filter(v => v > (avg * 1.5)).length || (activeBarangays > 3 ? 3 : activeBarangays);
-    
+
     // Assume 2 officers per active sector/barangay as a baseline estimate
     const officers = activeBarangays * 2;
 
@@ -1267,6 +1413,35 @@ export default function App() {
                           </select>
                         </div>
                       </div>
+
+                      {/* Barangay filter & instant status */}
+                      <div>
+                        <label className="block text-[8px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                          Barangay Sector
+                        </label>
+                        <select
+                          value={draftBarangay}
+                          onChange={(e) => setDraftBarangay(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-lg p-1.5 text-[10px] font-medium text-slate-350 outline-none"
+                        >
+                          <option value="all">📍 All Barangays ({uniqueBarangays.length})</option>
+                          {uniqueBarangays.map(b => (
+                            <option key={b} value={b}>{b}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {draftBrgyStats && (
+                        <div className={`p-2.5 rounded-xl border flex items-center justify-between text-[10px] font-bold shadow-sm ${draftBrgyStats.badgeClass} animate-in fade-in duration-200`}>
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span className="text-xs">{draftBrgyStats.icon}</span>
+                            <span className="uppercase tracking-wider truncate">{draftBarangay}</span>
+                          </span>
+                          <span className="font-mono shrink-0 pl-2">
+                            {draftBrgyStats.count} Incidents ({draftBrgyStats.risk})
+                          </span>
+                        </div>
+                      )}
 
                       {/* Apply Action Button */}
                       <button

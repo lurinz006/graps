@@ -5,14 +5,24 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
   const [filterPriority, setFilterPriority] = useState('all');
   const [implementedRecos, setImplementedRecos] = useState(new Set());
   const [toastMessage, setToastMessage] = useState(null);
-  
+
   // Dynamic Alert Integration State
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   // Confirmation Modal State
   const [selectedReco, setSelectedReco] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [printingId, setPrintingId] = useState(null);
+
+  const handlePrintSingle = (e, id) => {
+    e.stopPropagation();
+    setPrintingId(id);
+    setTimeout(() => {
+      window.print();
+      setPrintingId(null);
+    }, 100);
+  };
 
   // Fetch active alerts on component mount
   useEffect(() => {
@@ -135,7 +145,7 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
       let targetTab = 'deployment';
       let iconClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
       let badgeClass = 'bg-rose-500/10 border-rose-500/35 text-rose-400';
-      
+
       if (alert.type === 'Patrol') {
         title = `Resolve Patrol Gap in ${alert.barangay}`;
         priority = 'HIGH';
@@ -207,20 +217,40 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
   };
 
   // Filter recommendations
-  const filteredRecos = filterPriority === 'all' 
-    ? allRecommendations 
+  const filteredRecos = filterPriority === 'all'
+    ? allRecommendations
     : allRecommendations.filter(r => r.priority === filterPriority);
 
   return (
     <div className="p-8 max-w-[1600px] w-full mx-auto space-y-6">
-      
+
+      {/* Official Print Letterhead (Hidden on Screen, Visible on Print) */}
+      <div className="hidden print:block mb-10 text-center text-black">
+        <div className="flex justify-between items-center px-8 mb-4">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Philippine_National_Police_seal.svg/512px-Philippine_National_Police_seal.svg.png" alt="PNP Logo" className="w-24 h-24 object-contain" onError={(e) => e.target.style.display = 'none'} />
+          <div className="text-center font-serif leading-tight">
+            <p className="text-[13px]">Republic of the Philippines</p>
+            <p className="text-[13px] font-bold">NATIONAL POLICE COMMISSION</p>
+            <p className="text-lg font-black mt-1">PHILIPPINE NATIONAL POLICE</p>
+            <p className="text-base font-bold text-slate-800 mt-1">ZAMBOANGA CITY POLICE OFFICE</p>
+            <p className="text-xs mt-1">Zamboanga City, Zamboanga del Sur</p>
+          </div>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Ph_seal_zamboanga_city.png/512px-Ph_seal_zamboanga_city.png" alt="Zamboanga Logo" className="w-24 h-24 object-contain" onError={(e) => e.target.style.display = 'none'} />
+        </div>
+        <div className="w-full border-t-2 border-black mb-0.5"></div>
+        <div className="w-full border-t border-black mb-8"></div>
+
+        <h1 className="text-2xl font-black uppercase tracking-widest mb-2 font-serif">Prescriptive Recommendations</h1>
+        <p className="text-sm font-medium mb-6">System-Generated Automated Patrol Directives & Mitigations</p>
+      </div>
+
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <div>
           <h2 className="text-xl font-bold text-slate-100 tracking-tight font-sans">Prescriptive Recommendations</h2>
           <p className="text-xs text-slate-500">Automated model-driven patrol directives and scheduling mitigations</p>
         </div>
-        <button 
+        <button
           onClick={() => window.print()}
           className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
         >
@@ -244,7 +274,7 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
       </div>
 
       {/* Filter tab bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-between shadow-lg">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-between shadow-lg print:hidden">
         <div className="flex items-center gap-2 text-slate-300 text-xs font-semibold">
           <AlertCircle size={14} className="text-slate-500" /> Filter Directives
         </div>
@@ -253,11 +283,10 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
             <button
               key={p}
               onClick={() => setFilterPriority(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                filterPriority === p 
-                  ? 'bg-brand-600 text-slate-50 shadow' 
-                  : 'text-slate-400 hover:text-slate-200 bg-slate-950 hover:bg-slate-900 border border-slate-850'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterPriority === p
+                ? 'bg-brand-600 text-slate-50 shadow'
+                : 'text-slate-400 hover:text-slate-200 bg-slate-950 hover:bg-slate-900 border border-slate-850'
+                }`}
             >
               {p}
             </button>
@@ -271,11 +300,14 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
           const isImplemented = implementedRecos.has(reco.id);
 
           return (
-            <div 
-              key={reco.id} 
-              className={`bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300 ${
-                isImplemented ? 'opacity-50 border-emerald-500/20 bg-slate-900/40' : 'hover:border-slate-750'
-              }`}
+            <div
+              key={reco.id}
+              onClick={() => { if (!isImplemented) triggerImplement(reco); }}
+              className={`break-inside-avoid bg-slate-900 border border-slate-850 rounded-3xl p-6 shadow-xl flex flex-col justify-between transition-all duration-300 ${printingId && printingId !== reco.id ? 'print:hidden' : ''
+                } ${isImplemented
+                  ? 'opacity-50 print:opacity-100 border-emerald-500/20 bg-slate-900/40 cursor-default'
+                  : 'hover:border-slate-700 hover:bg-slate-850/50 cursor-pointer'
+                }`}
             >
               <div className="space-y-4">
                 {/* Card Title & Icon */}
@@ -293,7 +325,7 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
 
                 {/* Description */}
                 <p className="text-xs text-slate-350 leading-relaxed font-medium">{reco.desc}</p>
-                
+
                 {/* Meta grid */}
                 <div className="space-y-2 border-t border-slate-850/80 pt-3">
                   <div className="flex items-center gap-2 text-[10px] text-slate-500 font-semibold">
@@ -316,16 +348,22 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
                 </div>
               </div>
 
-              {/* Implement Button */}
-              <div className="mt-6 pt-4 border-t border-slate-850/60 flex justify-end">
+              {/* Implement Button & Single Print */}
+              <div className="mt-6 pt-4 border-t border-slate-850/60 flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={(e) => handlePrintSingle(e, reco.id)}
+                  className="flex items-center gap-1.5 font-bold text-xs rounded-xl px-3 py-2.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all cursor-pointer print:hidden"
+                >
+                  <Printer size={14} /> Print Card
+                </button>
                 <button
                   onClick={() => triggerImplement(reco)}
                   disabled={isImplemented}
-                  className={`flex items-center gap-1.5 font-bold text-xs rounded-xl px-4 py-2.5 shadow transition-all cursor-pointer ${
-                    isImplemented 
-                      ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 cursor-not-allowed' 
-                      : 'bg-brand-600 hover:bg-brand-500 text-slate-50 shadow-brand-500/10 hover:shadow-brand-500/20'
-                  }`}
+                  className={`flex items-center gap-1.5 font-bold text-xs rounded-xl px-4 py-2.5 shadow transition-all cursor-pointer print:hidden ${isImplemented
+                    ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 cursor-not-allowed'
+                    : 'bg-brand-600 hover:bg-brand-500 text-slate-50 shadow-brand-500/10 hover:shadow-brand-500/20'
+                    }`}
                 >
                   {isImplemented ? (
                     <>
@@ -350,11 +388,11 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
               <ShieldCheck size={24} />
               <h3 className="text-base font-bold text-slate-100">Confirm Implementation</h3>
             </div>
-            
+
             <p className="text-xs text-slate-350 leading-relaxed font-medium">
               You are about to implement: <strong className="text-slate-100">"{selectedReco.title}"</strong>.
             </p>
-            
+
             {selectedReco.targetTab && (
               <div className="bg-slate-950 rounded-xl p-3 border border-slate-850 text-[11px] text-slate-400">
                 📌 <strong>Action Redirection:</strong> Fulfilling this directive will automatically navigate you to the <strong className="text-slate-300">{selectedReco.targetTab.toUpperCase()}</strong> workspace.
@@ -381,11 +419,11 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
                   });
                   setToastMessage(`Recommendation marked as implemented!`);
                   setTimeout(() => setToastMessage(null), 3000);
-                  
+
                   const targetTab = selectedReco.targetTab;
                   setShowModal(false);
                   setSelectedReco(null);
-                  
+
                   if (targetTab && typeof onNavigateToTab === 'function') {
                     setTimeout(() => {
                       onNavigateToTab(targetTab);

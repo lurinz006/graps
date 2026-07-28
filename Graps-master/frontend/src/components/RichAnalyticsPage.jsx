@@ -2,6 +2,37 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Cpu, Activity, AlertCircle, Link, BarChart3, ScatterChart as ScatterIcon, Layers } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, Cell, LineChart, Line, ScatterChart, Scatter, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ReferenceLine, LabelList } from 'recharts';
 
+const CustomScatterTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    let riskLevel = 'Low Risk';
+    let riskColor = '#22c55e'; // Green
+    if (data.x >= 75) { riskLevel = 'Critical Risk'; riskColor = '#ef4444'; }
+    else if (data.x >= 50) { riskLevel = 'High Risk'; riskColor = '#f97316'; }
+    else if (data.x >= 25) { riskLevel = 'Moderate Risk'; riskColor = '#eab308'; }
+
+    return (
+      <div style={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '10px', padding: '10px 14px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', border: '1px solid #334155' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '6px', marginBottom: '8px', gap: '12px' }}>
+          <span style={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '14px' }}>
+            Barangay: <span style={{ color: '#38bdf8' }}>{data.name}</span>
+          </span>
+          <span style={{ backgroundColor: `${riskColor}20`, color: riskColor, border: `1px solid ${riskColor}40`, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            {riskLevel}
+          </span>
+        </div>
+        <p style={{ color: '#60a5fa', fontWeight: '600', fontSize: '13px', margin: '4px 0' }}>
+          Actual Recorded: <span style={{ color: '#f8fafc' }}>{data.x} incidents</span>
+        </p>
+        <p style={{ color: '#f43f5e', fontWeight: '600', fontSize: '13px', margin: '4px 0' }}>
+          Model Predicted: <span style={{ color: '#f8fafc' }}>{data.y} incidents</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function RichAnalyticsPage() {
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentYear  = new Date().getFullYear().toString();
@@ -258,7 +289,13 @@ export default function RichAnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-slate-800))" />
                 <XAxis dataKey="name" stroke="rgb(var(--color-slate-400))" fontSize={9} />
                 <YAxis stroke="rgb(var(--color-slate-400))" fontSize={9} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgb(var(--color-slate-900))', borderColor: 'rgb(var(--color-slate-800))', borderRadius: '10px' }} labelStyle={{ color: 'rgb(var(--color-slate-100))' }} itemStyle={{ color: 'rgb(var(--color-slate-300))' }} />
+                <Tooltip 
+                  formatter={(value, name) => [`${value} Incidents`, name === 'Actual' ? 'Recorded Crime' : 'AI Forecast']}
+                  labelFormatter={(label) => `Month: ${label}`}
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '10px', padding: '10px 14px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }} 
+                  labelStyle={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #334155', paddingBottom: '6px', marginBottom: '8px' }} 
+                  itemStyle={{ color: '#60a5fa', fontWeight: '600', fontSize: '13px' }} 
+                />
                 <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', color: 'rgb(var(--color-slate-400))' }} />
                 <Line type="monotone" dataKey="Actual" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="Forecast" stroke="#8b5cf6" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} connectNulls />
@@ -279,7 +316,18 @@ export default function RichAnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-slate-800))" />
                 <XAxis dataKey="name" stroke="rgb(var(--color-slate-400))" fontSize={8} interval={2} />
                 <YAxis stroke="rgb(var(--color-slate-400))" fontSize={9} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgb(var(--color-slate-900))', borderColor: 'rgb(var(--color-slate-800))', borderRadius: '10px' }} labelStyle={{ color: 'rgb(var(--color-slate-100))' }} itemStyle={{ color: 'rgb(var(--color-slate-300))' }} />
+                <Tooltip 
+                  formatter={(value) => [`${value} Total Incidents`, 'Crime Count']}
+                  labelFormatter={(label) => {
+                    const hour = parseInt(label, 10);
+                    const period = hour >= 12 ? 'PM' : 'AM';
+                    const displayHour = hour % 12 || 12;
+                    return `Time: ${label} (${displayHour}:00 ${period})`;
+                  }}
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '10px', padding: '10px 14px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }} 
+                  labelStyle={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #334155', paddingBottom: '6px', marginBottom: '8px' }} 
+                  itemStyle={{ color: '#60a5fa', fontWeight: '600', fontSize: '13px' }} 
+                />
                 <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                   {hourlyDataFormatted.map((entry, idx) => (
                     <Cell key={`cell-${idx}`} fill={entry.fill} />
@@ -307,10 +355,18 @@ export default function RichAnalyticsPage() {
                 <CartesianGrid stroke="rgb(var(--color-slate-800))" />
                 <XAxis type="number" dataKey="x" name="Actual Incidents" stroke="rgb(var(--color-slate-400))" fontSize={9} />
                 <YAxis type="number" dataKey="y" name="Predicted Risk" stroke="rgb(var(--color-slate-400))" fontSize={9} />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'rgb(var(--color-slate-900))', borderColor: 'rgb(var(--color-slate-800))', borderRadius: '10px' }} labelStyle={{ color: 'rgb(var(--color-slate-100))' }} itemStyle={{ color: 'rgb(var(--color-slate-300))' }} />
+                <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomScatterTooltip />} />
                 <ReferenceLine x={0} y={0} stroke="rgb(var(--color-slate-400))" />
-                <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 50, y: 50 }]} stroke="#ef4444" strokeDasharray="5 5" strokeWidth={2} label={{ value: 'Perfect Fit', position: 'top', fill: '#ef4444', fontSize: 9 }} />
-                <Scatter name="Barangay Coordinate Node" data={regressionDataFormatted} fill="#3b82f6" shape="circle" />
+                <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 90, y: 90 }]} stroke="#ef4444" strokeDasharray="5 5" strokeWidth={2} label={{ value: 'Perfect Fit', position: 'top', fill: '#ef4444', fontSize: 9 }} />
+                <Scatter name="Barangay Coordinate Node" data={regressionDataFormatted} shape="circle">
+                  {regressionDataFormatted.map((entry, index) => {
+                    let color = '#22c55e'; // Green (< 25)
+                    if (entry.x >= 75) color = '#ef4444'; // Red (Critical)
+                    else if (entry.x >= 50) color = '#f97316'; // Orange (High)
+                    else if (entry.x >= 25) color = '#eab308'; // Yellow (Moderate)
+                    return <Cell key={`cell-${index}`} fill={color} />;
+                  })}
+                </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
@@ -338,8 +394,8 @@ export default function RichAnalyticsPage() {
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-500 pt-4 leading-relaxed border-t border-slate-850/80 mt-4">
-            *Crime category distribution percentages dynamically resolved over ZPPU source records.*
+          <p className="text-[10px] text-slate-500 pt-4 leading-relaxed border-t border-slate-850/80 mt-4 italic">
+            Crime category distribution percentages dynamically resolved over ZPPSU source records.
           </p>
         </div>
 

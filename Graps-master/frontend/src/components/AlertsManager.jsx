@@ -819,7 +819,11 @@ export default function AlertsManager({ user, onAlertsCountChanged, onNavigateTo
                 type="button"
                 onClick={handleDeployOfficer}
                 disabled={!deployingOfficerId || deployLoading}
-                className="bg-brand-600 hover:bg-brand-500 disabled:bg-slate-950/20 text-slate-50 disabled:text-slate-650 font-semibold px-5 py-2.5 text-xs rounded-xl transition-all shadow cursor-pointer disabled:cursor-not-allowed border disabled:border-slate-900 border-transparent text-center"
+                className={`font-semibold px-5 py-2.5 text-xs rounded-xl transition-all shadow border text-center ${
+                  !deployingOfficerId || deployLoading
+                    ? 'bg-slate-200 text-slate-800 cursor-not-allowed border-slate-300'
+                    : 'bg-brand-600 hover:bg-brand-500 text-slate-50 cursor-pointer border-transparent'
+                }`}
               >
                 {deployLoading ? 'Deploying...' : 'Deploy & Resolve'}
               </button>

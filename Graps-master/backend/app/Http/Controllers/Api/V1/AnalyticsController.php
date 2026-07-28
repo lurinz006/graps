@@ -523,13 +523,29 @@ class AnalyticsController extends Controller
                 ->pluck('count', 'assigned_barangay')
                 ->toArray();
 
+            $normalizeKey = function($name) {
+                $cleaned = strtolower(trim($name));
+                if (in_array($cleaned, ['zone 1', 'zone i', 'barangay zone 1', 'barangay zone i', 'brgy zone 1', 'brgy zone i', 'barangay zone i (pob.)', 'zone i (pob.)'])) return 'BARANGAY ZONE I';
+                if (in_array($cleaned, ['zone 2', 'zone ii', 'barangay zone 2', 'barangay zone ii', 'brgy zone 2', 'brgy zone ii', 'barangay zone ii (pob.)', 'zone ii (pob.)'])) return 'BARANGAY ZONE II';
+                if (in_array($cleaned, ['zone 3', 'zone iii', 'barangay zone 3', 'barangay zone iii', 'brgy zone 3', 'brgy zone iii', 'barangay zone iii (pob.)', 'zone iii (pob.)'])) return 'BARANGAY ZONE III';
+                if (in_array($cleaned, ['zone 4', 'zone iv', 'barangay zone 4', 'barangay zone iv', 'brgy zone 4', 'brgy zone iv', 'barangay zone iv (pob.)', 'zone iv (pob.)'])) return 'BARANGAY ZONE IV';
+                return strtoupper(trim($name));
+            };
+
+            $normCurrent = [];
+            foreach ($incidentsCurrent as $k => $v) { $nk = $normalizeKey($k); $normCurrent[$nk] = ($normCurrent[$nk] ?? 0) + $v; }
+            $normPrev = [];
+            foreach ($incidentsPrev as $k => $v) { $nk = $normalizeKey($k); $normPrev[$nk] = ($normPrev[$nk] ?? 0) + $v; }
+            $normOfficers = [];
+            foreach ($officersCount as $k => $v) { $nk = $normalizeKey($k); $normOfficers[$nk] = ($normOfficers[$nk] ?? 0) + $v; }
+
             $result = [];
             foreach ($barangays as $b) {
                 $name = $b->name;
-                $upperName = strtoupper($name);
-                $currentCount = $incidentsCurrent[$upperName] ?? 0;
-                $prevCount = $incidentsPrev[$upperName] ?? 0;
-                $officers = $officersCount[$upperName] ?? 0;
+                $upperName = $normalizeKey($name);
+                $currentCount = $normCurrent[$upperName] ?? 0;
+                $prevCount = $normPrev[$upperName] ?? 0;
+                $officers = $normOfficers[$upperName] ?? 0;
 
                 // Risk level
                 $risk = 'Low';
@@ -714,13 +730,14 @@ class AnalyticsController extends Controller
             $barangays = DB::table('barangays')->get();
             $barangayIncidents = DB::table('spatial_data')
                 ->whereYear('recorded_at', $year)
-                ->select('barangay', DB::raw('count(*) as count'))
-                ->groupBy('barangay')
-                ->pluck('count', 'barangay')
+                ->select(DB::raw('upper(barangay) as barangay_upper'), DB::raw('count(*) as count'))
+                ->groupBy(DB::raw('upper(barangay)'))
+                ->pluck('count', 'barangay_upper')
                 ->toArray();
 
             foreach ($barangays as $b) {
-                $actual = $barangayIncidents[$b->name] ?? 0;
+                $cleanUpper = strtoupper(trim($b->name));
+                $actual = $barangayIncidents[$cleanUpper] ?? 0;
                 $seedVal = (ord($b->name[0]) + strlen($b->name)) % 100;
                 $rnd = ($seedVal / 100) * 0.22 - 0.12;
                 $predicted = max(1, round($actual * (1.0 + $rnd)));
@@ -869,31 +886,44 @@ class AnalyticsController extends Controller
         try {
             $year = $request->query('year', '2026');
 
-            // Find top 5 most incident-dense barangays
-            $topBarangays = DB::table('spatial_data')
-                ->join('barangays', 'spatial_data.barangay', '=', 'barangays.name')
+            // Cache barangays in memory for fast O(1) loop lookup (avoid slow SQL joins)
+            $allBarangays = DB::table('barangays')->get();
+            $barangayMap = [];
+            foreach ($allBarangays as $b) {
+                $barangayMap[strtoupper(trim($b->name))] = $b;
+            }
+
+            // Find top 15 most incident-dense barangays without expensive joins
+            $topCounts = DB::table('spatial_data')
                 ->whereYear('recorded_at', $year)
-                ->select('barangays.name', 'barangays.centroid_lat', 'barangays.centroid_lng', DB::raw('count(*) as count'))
-                ->groupBy('barangays.name', 'barangays.centroid_lat', 'barangays.centroid_lng')
+                ->select(DB::raw('upper(barangay) as barangay_upper'), DB::raw('count(*) as count'))
+                ->groupBy(DB::raw('upper(barangay)'))
                 ->orderBy('count', 'desc')
-                ->limit(5)
+                ->limit(15)
                 ->get();
 
             $clusters = [];
-            foreach ($topBarangays as $index => $tb) {
+            foreach ($topCounts as $index => $tb) {
+                $cleanUpper = strtoupper(trim($tb->barangay_upper));
+                $barangayRecord = $barangayMap[$cleanUpper] ?? null;
+
+                $name = $barangayRecord ? $barangayRecord->name : ucwords(strtolower($tb->barangay_upper));
+                $lat = $barangayRecord ? (float)$barangayRecord->centroid_lat : 6.9214;
+                $lng = $barangayRecord ? (float)$barangayRecord->centroid_lng : 122.079;
+
                 $id = 'C-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT);
                 $radius = 0.5 + min(1.5, $tb->count * 0.02);
 
                 $type = 'Sparse';
-                if ($tb->count > 150) {
+                if ($tb->count >= 70) {
                     $type = 'Dense';
-                } elseif ($tb->count > 60) {
+                } elseif ($tb->count >= 40) {
                     $type = 'Moderate';
                 }
 
                 $dominantCrime = DB::table('spatial_data')
                     ->whereYear('recorded_at', $year)
-                    ->where('barangay', $tb->name)
+                    ->where('barangay', $tb->barangay_upper)
                     ->select('incident_type', DB::raw('count(*) as count'))
                     ->groupBy('incident_type')
                     ->orderBy('count', 'desc')
@@ -913,14 +943,14 @@ class AnalyticsController extends Controller
 
                 $clusters[] = [
                     'id' => $id,
-                    'core' => $tb->name,
+                    'core' => $name,
                     'count' => $tb->count,
                     'radius' => round($radius, 2),
                     'type' => $type,
                     'crime' => $dominantType,
                     'reco' => $reco,
-                    'lat' => (float)$tb->centroid_lat,
-                    'lng' => (float)$tb->centroid_lng
+                    'lat' => $lat,
+                    'lng' => $lng
                 ];
             }
 

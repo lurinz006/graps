@@ -227,23 +227,23 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
       'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 9, 1, 15, 3],
       'heatmap-color': [
         'interpolate', ['linear'], ['heatmap-density'],
-        0, 'rgba(0, 242, 254, 0)',
-        0.2, 'rgba(0, 242, 254, 0.3)',
-        0.5, 'rgba(56, 189, 248, 0.6)',
-        0.8, 'rgba(139, 92, 246, 0.85)',
-        1, 'rgba(244, 63, 94, 0.95)',
+        0, 'rgba(34, 197, 94, 0)',
+        0.2, 'rgba(34, 197, 94, 0.6)', // Green (Low Risk)
+        0.5, 'rgba(234, 179, 8, 0.75)', // Yellow (Moderate Risk)
+        0.8, 'rgba(249, 115, 22, 0.85)', // Orange (High Risk)
+        1, 'rgba(239, 68, 68, 0.95)', // Red (Critical Risk)
       ],
-      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 9, 12, 15, 25],
-      'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 12, 0],
+      'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 9, 8, 15, 25],
+      'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.85, 12, 0],
     },
   };
 
   const pointsLayer = {
     id: 'points-layer',
     type: 'circle',
-    minzoom: 12,
+    minzoom: 9,
     paint: {
-      'circle-radius': 6,
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 4, 12, 6, 15, 10],
       'circle-color': [
         'step',
         ['get', 'value'],
@@ -254,7 +254,7 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
       ],
       'circle-stroke-width': 1.5,
       'circle-stroke-color': '#0f172a',
-      'circle-opacity': 0.9,
+      'circle-opacity': 0.95,
     }
   };
 
@@ -266,7 +266,7 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
         const pointId = clickedFeature.properties.id;
         const point = points.find(p => p.id == pointId);
         if (point) {
-          setSelectedPoint(point);
+          setSelectedPoint(prev => (prev && prev.id === point.id) ? null : point);
           return;
         }
       }
@@ -499,7 +499,15 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
                   <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Barangay Name</label>
                   <select
                     value={formBarangay}
-                    onChange={(e) => setFormBarangay(e.target.value)}
+                    onChange={(e) => {
+                      const newBrgy = e.target.value;
+                      setFormBarangay(newBrgy);
+                      // Auto-update coordinates based on selected barangay
+                      const matched = barangayList.find(b => b.name === newBrgy);
+                      if (matched && matched.lat && matched.lng) {
+                        setPendingClickCoords({ lat: parseFloat(matched.lat), lng: parseFloat(matched.lng) });
+                      }
+                    }}
                     className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none cursor-pointer"
                   >
                     {finalBarangays.map(name => (
