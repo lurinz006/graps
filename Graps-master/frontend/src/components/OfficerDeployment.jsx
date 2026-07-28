@@ -847,8 +847,8 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
                           <td className="py-3 px-3 text-slate-400 font-medium">{b.ps}</td>
                           <td className="py-3 px-3 text-center font-semibold text-slate-350">{b.incidents}</td>
                           <td className="py-3 px-3">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${isCritical ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-                                isHigh ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${isCritical ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                isHigh ? 'bg-orange-600/25 text-orange-600 dark:text-orange-400 border-orange-600/50 font-black' :
                                   isMedium ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
                                     'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                               }`}>

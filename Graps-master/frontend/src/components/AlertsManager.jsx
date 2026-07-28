@@ -434,7 +434,7 @@ export default function AlertsManager({ user, onAlertsCountChanged, onNavigateTo
                           </span>
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
                             isCritical ? 'bg-rose-500/15 border-rose-500/25 text-rose-400' :
-                            isHigh ? 'bg-amber-500/15 border-amber-500/25 text-amber-400' :
+                            isHigh ? 'bg-orange-600/25 border-orange-600/50 text-orange-600 dark:text-orange-400 font-black' :
                             'bg-sky-500/15 border-sky-500/25 text-sky-400'
                           }`}>
                             {a.severity} Severity
@@ -736,7 +736,7 @@ export default function AlertsManager({ user, onAlertsCountChanged, onNavigateTo
                     <div className="bg-slate-950/50 border border-slate-850 rounded-xl p-2.5 text-center">
                       <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider block">Risk Level</span>
                       <span className={`text-[10px] font-extrabold mt-1.5 inline-block uppercase tracking-wider ${
-                        isCritical ? 'text-rose-400' : isHigh ? 'text-amber-400' : isMedium ? 'text-yellow-400' : 'text-emerald-450'
+                        isCritical ? 'text-rose-400' : isHigh ? 'text-orange-500 font-black' : isMedium ? 'text-yellow-400' : 'text-emerald-450'
                       }`}>{bInfo.risk}</span>
                     </div>
                     <div className="bg-slate-950/50 border border-slate-850 rounded-xl p-2.5 text-center">

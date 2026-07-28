@@ -203,8 +203,8 @@ export default function IncidentsLog({ points, onAddPoint, onDeletePoint, barang
           </span>
         </div>
         <div className="bg-slate-900/60 border border-slate-850/80 p-4 rounded-2xl">
-          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider block">High Severity</span>
-          <span className="text-xl font-bold text-amber-450 mt-1 block">
+          <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider block">High Severity</span>
+          <span className="text-xl font-black text-orange-600 dark:text-orange-400 mt-1 block">
             {filteredIncidents.filter(p => p.value >= 50 && p.value < 100).length}
           </span>
         </div>
@@ -313,7 +313,7 @@ export default function IncidentsLog({ points, onAddPoint, onDeletePoint, barang
                       <td className="py-3.5 px-5">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${
                           isCritical ? 'bg-rose-500/10 text-rose-450 border-rose-500/20' :
-                          isHigh ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' :
+                          isHigh ? 'bg-orange-600/25 text-orange-600 dark:text-orange-400 border-orange-600/50 font-black' :
                           isMedium ? 'bg-yellow-500/10 text-yellow-450 border-yellow-500/20' :
                           'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                         }`}>

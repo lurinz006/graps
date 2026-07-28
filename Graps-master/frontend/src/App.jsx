@@ -418,7 +418,7 @@ export default function App() {
       icon = '🔴';
     } else if (count >= highThresh) {
       risk = 'High';
-      badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      badgeClass = 'bg-orange-600/25 text-orange-600 dark:text-orange-400 border-orange-600/50 font-black';
       icon = '🟠';
     } else if (count >= modThresh) {
       risk = 'Moderate';
@@ -828,7 +828,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans selection:bg-brand-500/30 selection:text-brand-200">
 
       {/* 🧭 Vertical Left Sidebar Menu Bar */}
-      <aside className={`h-screen sticky top-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 transition-all duration-300 overflow-hidden ${isSidebarCollapsed ? 'w-20' : 'w-64'
+      <aside className={`print:hidden h-screen sticky top-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 transition-all duration-300 overflow-hidden ${isSidebarCollapsed ? 'w-20' : 'w-64'
         }`}>
         <div className="flex flex-col flex-1 min-h-0">
           {/* Brand Header & Toggle (Dynamic layout based on collapse state) */}
@@ -1039,7 +1039,7 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Top Status Bar */}
-        <header className="h-16 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between z-10 shrink-0">
+        <header className="print:hidden h-16 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between z-10 shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-xs font-bold text-slate-350 capitalize tracking-wide">
               {activeTab} Workspace

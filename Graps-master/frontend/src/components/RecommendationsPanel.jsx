@@ -259,7 +259,7 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
       </div>
 
       {/* Analytics Engine Badge Banner */}
-      <div className="bg-slate-900 border border-slate-850 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+      <div className="print:hidden bg-slate-900 border border-slate-850 rounded-2xl p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <Star size={16} className="text-violet-400" />
           <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Analytical Model Base:</span>
@@ -348,15 +348,8 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
                 </div>
               </div>
 
-              {/* Implement Button & Single Print */}
-              <div className="mt-6 pt-4 border-t border-slate-850/60 flex justify-between items-center">
-                <button
-                  type="button"
-                  onClick={(e) => handlePrintSingle(e, reco.id)}
-                  className="flex items-center gap-1.5 font-bold text-xs rounded-xl px-3 py-2.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all cursor-pointer print:hidden"
-                >
-                  <Printer size={14} /> Print Card
-                </button>
+              {/* Implement Button */}
+              <div className="mt-6 pt-4 border-t border-slate-850/60 flex justify-end items-center">
                 <button
                   onClick={() => triggerImplement(reco)}
                   disabled={isImplemented}
