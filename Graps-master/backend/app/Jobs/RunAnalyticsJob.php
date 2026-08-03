@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Artisan;
@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Log;
 
 class RunAnalyticsJob implements ShouldQueue
 {
-    use Queueable, Dispatchable, InteractsWithQueue, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected array $options;
 
     /**
      * Create a new job instance.
-     * 
-     * @param array $options Arguments and options to pass to the Artisan command.
+     *
+     * @param  array  $options  Arguments and options to pass to the Artisan command.
      */
     public function __construct(array $options)
     {
@@ -40,7 +40,7 @@ class RunAnalyticsJob implements ShouldQueue
             if (str_starts_with($key, '--')) {
                 $params[$key] = $value;
             } else {
-                $params['--' . $key] = $value;
+                $params['--'.$key] = $value;
             }
         }
 
@@ -55,7 +55,7 @@ class RunAnalyticsJob implements ShouldQueue
                 $this->fail(new \Exception("Analytics job failed with exit code {$exitCode}"));
             }
         } catch (\Exception $e) {
-            Log::error('Exception occurred during background analytics job: ' . $e->getMessage());
+            Log::error('Exception occurred during background analytics job: '.$e->getMessage());
             throw $e;
         }
     }

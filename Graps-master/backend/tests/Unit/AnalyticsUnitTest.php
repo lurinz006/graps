@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AnalyticsController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Unit: AnalyticsController – pure logic tests (no HTTP layer)
@@ -11,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 describe('AnalyticsController Unit', function () {
 
     it('can be instantiated', function () {
-        $controller = new AnalyticsController();
+        $controller = new AnalyticsController;
         expect($controller)->toBeInstanceOf(AnalyticsController::class);
     });
 
@@ -92,7 +90,7 @@ describe('Date/time committed parsing', function () {
     it('combines dateCommitted and timeCommitted into a valid datetime', function () {
         $date = '2025-01-15';
         $time = '14:30:00';
-        $result = date('Y-m-d H:i:s', strtotime($date . ' ' . $time));
+        $result = date('Y-m-d H:i:s', strtotime($date.' '.$time));
 
         expect($result)->toBe('2025-01-15 14:30:00');
     });
@@ -100,17 +98,17 @@ describe('Date/time committed parsing', function () {
     it('defaults time to 00:00:00 when timeCommitted is absent', function () {
         $date = '2025-03-10';
         $time = null ?? '00:00:00';
-        $result = date('Y-m-d H:i:s', strtotime($date . ' ' . $time));
+        $result = date('Y-m-d H:i:s', strtotime($date.' '.$time));
 
         expect($result)->toBe('2025-03-10 00:00:00');
     });
 
     it('handles missing dateCommitted by setting recordedAt to null', function () {
         $dateCommitted = null;
-        $recordedAt    = null;
+        $recordedAt = null;
 
-        if (!empty($dateCommitted)) {
-            $recordedAt = date('Y-m-d H:i:s', strtotime($dateCommitted . ' 00:00:00'));
+        if (! empty($dateCommitted)) {
+            $recordedAt = date('Y-m-d H:i:s', strtotime($dateCommitted.' 00:00:00'));
         }
 
         expect($recordedAt)->toBeNull();
@@ -125,21 +123,21 @@ describe('Date/time committed parsing', function () {
 describe('Spatial value field coercion', function () {
 
     it('uses the numeric value when present and valid', function () {
-        $point  = ['value' => '3.5'];
+        $point = ['value' => '3.5'];
         $result = (isset($point['value']) && is_numeric($point['value'])) ? (float) $point['value'] : 1.0;
 
         expect($result)->toBe(3.5);
     });
 
     it('defaults to 1.0 when value is absent', function () {
-        $point  = [];
+        $point = [];
         $result = (isset($point['value']) && is_numeric($point['value'])) ? (float) $point['value'] : 1.0;
 
         expect($result)->toBe(1.0);
     });
 
     it('defaults to 1.0 when value is a non-numeric string', function () {
-        $point  = ['value' => 'N/A'];
+        $point = ['value' => 'N/A'];
         $result = (isset($point['value']) && is_numeric($point['value'])) ? (float) $point['value'] : 1.0;
 
         expect($result)->toBe(1.0);
@@ -190,7 +188,7 @@ describe('Coordinate coercion logic', function () {
 describe('Bulk insert chunking logic', function () {
 
     it('splits 1500 records into 3 chunks of 500', function () {
-        $data   = array_fill(0, 1500, ['dummy' => true]);
+        $data = array_fill(0, 1500, ['dummy' => true]);
         $chunks = array_chunk($data, 500);
 
         expect($chunks)->toHaveCount(3);
@@ -199,7 +197,7 @@ describe('Bulk insert chunking logic', function () {
     });
 
     it('handles less than 500 records in a single chunk', function () {
-        $data   = array_fill(0, 10, ['dummy' => true]);
+        $data = array_fill(0, 10, ['dummy' => true]);
         $chunks = array_chunk($data, 500);
 
         expect($chunks)->toHaveCount(1);

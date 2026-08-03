@@ -14,15 +14,15 @@ class IncidentSeeder extends Seeder
     {
         DB::table('spatial_data')->truncate();
 
-        $jsonPath = __DIR__ . '/all_incidents.json';
-        if (!file_exists($jsonPath)) {
+        $jsonPath = __DIR__.'/all_incidents.json';
+        if (! file_exists($jsonPath)) {
             return;
         }
 
         $json = file_get_contents($jsonPath);
         $incidents = json_decode($json, true);
 
-        if (!is_array($incidents)) {
+        if (! is_array($incidents)) {
             return;
         }
 
@@ -37,29 +37,29 @@ class IncidentSeeder extends Seeder
         foreach ($incidents as $point) {
             $recordedAt = null;
             $dateStr = $point['date'] ?? null;
-            if (!empty($dateStr)) {
+            if (! empty($dateStr)) {
                 $parts = explode('-', $dateStr);
                 if (count($parts) === 3) {
-                    $year = (int)$parts[0];
-                    $month = (int)$parts[1];
-                    $day = (int)$parts[2];
-                    
-                    if (!checkdate($month, $day, $year)) {
+                    $year = (int) $parts[0];
+                    $month = (int) $parts[1];
+                    $day = (int) $parts[2];
+
+                    if (! checkdate($month, $day, $year)) {
                         // Clamp to last day of month
                         $day = cal_days_in_month(CAL_GREGORIAN, $month, $year);
                         $dateStr = sprintf('%04d-%02d-%02d', $year, $month, $day);
                     }
                 }
-                $time = !empty($point['time']) ? $point['time'] : '00:00:00';
-                $recordedAt = date('Y-m-d H:i:s', strtotime($dateStr . ' ' . $time));
+                $time = ! empty($point['time']) ? $point['time'] : '00:00:00';
+                $recordedAt = date('Y-m-d H:i:s', strtotime($dateStr.' '.$time));
             }
 
-            $lat = (isset($point['lat']) && is_numeric($point['lat'])) ? (float)$point['lat'] : null;
-            $lng = (isset($point['lng']) && is_numeric($point['lng'])) ? (float)$point['lng'] : null;
+            $lat = (isset($point['lat']) && is_numeric($point['lat'])) ? (float) $point['lat'] : null;
+            $lng = (isset($point['lng']) && is_numeric($point['lng'])) ? (float) $point['lng'] : null;
             $barangayName = $point['barangay'] ?? null;
             $barangayId = null;
 
-            if (!empty($barangayName)) {
+            if (! empty($barangayName)) {
                 $cleanName = strtolower(trim($barangayName));
                 if (isset($barangayMap[$cleanName])) {
                     $barangayId = $barangayMap[$cleanName];

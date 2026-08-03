@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Shield, Users, AlertOctagon, Activity, Download, Search, CheckCircle, X, Edit2, Trash2 } from 'lucide-react';
+import { Shield, Users, AlertOctagon, Activity, Download, Search, CheckCircle, X, Edit2, Trash2, Upload } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 export default function OfficerDeployment({ user, filterYear, filterMonth }) {

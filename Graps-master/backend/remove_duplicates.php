@@ -1,22 +1,24 @@
 <?php
+
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 
 echo "Counting current records...\n";
 $total = DB::table('spatial_data')->count();
-echo "Total before: " . $total . "\n";
+echo 'Total before: '.$total."\n";
 
 echo "Finding duplicates...\n";
-$duplicates = DB::select("
+$duplicates = DB::select('
     SELECT MIN(id) as min_id, latitude, longitude, date_committed, time_committed, offense, count(*)
     FROM spatial_data
     GROUP BY latitude, longitude, date_committed, time_committed, offense
     HAVING count(*) > 1
-");
+');
 
 $deletedCount = 0;
 foreach ($duplicates as $dup) {
@@ -34,4 +36,4 @@ foreach ($duplicates as $dup) {
 echo "Deleted $deletedCount duplicate rows.\n";
 
 $totalAfter = DB::table('spatial_data')->count();
-echo "Total after: " . $totalAfter . "\n";
+echo 'Total after: '.$totalAfter."\n";

@@ -62,7 +62,7 @@ class AlertSeeder extends Seeder
                 'acknowledged_at' => now()->subHours(10),
                 'created_at' => now()->subHours(12),
                 'updated_at' => now()->subHours(10),
-            ]
+            ],
         ];
 
         DB::table('alerts')->insert($mockAlerts);

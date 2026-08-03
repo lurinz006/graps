@@ -666,6 +666,37 @@ export default function App() {
       });
   };
 
+  // --- DYNAMIC DASHBOARD STATS ---
+  const dynamicStats = useMemo(() => {
+    if (dashboardPoints.length === 0) {
+      return { criticalZones: 0, sectors: 0, officers: 0 };
+    }
+
+    // Count incidents per barangay
+    const counts = {};
+    dashboardPoints.forEach(p => {
+      if (p.barangay && p.barangay !== 'N/A' && p.barangay !== 'Unassigned') {
+        const norm = normalizeBarangayName(p.barangay);
+        counts[norm] = (counts[norm] || 0) + 1;
+      }
+    });
+
+    const activeBarangays = Object.keys(counts).length;
+
+    // Critical zones: Barangays with significantly higher than average incidents
+    const values = Object.values(counts);
+    const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+    const critical = values.filter(v => v > (avg * 1.5)).length || (activeBarangays > 3 ? 3 : activeBarangays);
+
+    // Assume 2 officers per active sector/barangay as a baseline estimate
+    const officers = activeBarangays * 2;
+
+    return {
+      criticalZones: critical,
+      sectors: activeBarangays,
+      officers: officers
+    };
+  }, [dashboardPoints]);
 
   // 1. RENDER LOGIN SCREEN IF UNAUTHENTICATED
   if (!user) {
@@ -791,38 +822,6 @@ export default function App() {
         return null;
     }
   };
-
-  // --- DYNAMIC DASHBOARD STATS ---
-  const dynamicStats = useMemo(() => {
-    if (dashboardPoints.length === 0) {
-      return { criticalZones: 0, sectors: 0, officers: 0 };
-    }
-
-    // Count incidents per barangay
-    const counts = {};
-    dashboardPoints.forEach(p => {
-      if (p.barangay && p.barangay !== 'N/A' && p.barangay !== 'Unassigned') {
-        const norm = normalizeBarangayName(p.barangay);
-        counts[norm] = (counts[norm] || 0) + 1;
-      }
-    });
-
-    const activeBarangays = Object.keys(counts).length;
-
-    // Critical zones: Barangays with significantly higher than average incidents
-    const values = Object.values(counts);
-    const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-    const critical = values.filter(v => v > (avg * 1.5)).length || (activeBarangays > 3 ? 3 : activeBarangays);
-
-    // Assume 2 officers per active sector/barangay as a baseline estimate
-    const officers = activeBarangays * 2;
-
-    return {
-      criticalZones: critical,
-      sectors: activeBarangays,
-      officers: officers
-    };
-  }, [dashboardPoints]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans selection:bg-brand-500/30 selection:text-brand-200">

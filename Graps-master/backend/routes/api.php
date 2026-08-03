@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AnalyticsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\AnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,11 +22,11 @@ Route::prefix('v1')->group(function () {
     Route::post('/spatial-data/upload-file', [AnalyticsController::class, 'uploadFile']);
     Route::delete('/spatial-data/clear', [AnalyticsController::class, 'clearSpatialData']);
     Route::delete('/spatial-data/{id}', [AnalyticsController::class, 'deleteSpatialPoint']);
-    
+
     // Analytics & ML triggering endpoints
     Route::post('/analytics/trigger', [AnalyticsController::class, 'triggerAnalytics']);
     Route::get('/analytics/metrics', [AnalyticsController::class, 'getMetrics']);
-    
+
     // Officers & Alerts endpoints
     Route::get('/officers', [AnalyticsController::class, 'getOfficers']);
     Route::post('/officers/upload', [AnalyticsController::class, 'uploadOfficers']);
@@ -45,4 +45,3 @@ Route::prefix('v1')->group(function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-

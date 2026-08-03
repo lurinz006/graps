@@ -1,10 +1,10 @@
 <?php
 
+use App\Jobs\RunAnalyticsJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
-use App\Jobs\RunAnalyticsJob;
 
 uses(RefreshDatabase::class);
 
@@ -14,11 +14,11 @@ uses(RefreshDatabase::class);
 function seedBarangay(string $name = 'canelar', float $lat = 6.9100, float $lng = 122.0700): void
 {
     DB::table('barangays')->insert([
-        'name'         => $name,
+        'name' => $name,
         'centroid_lat' => $lat,
         'centroid_lng' => $lng,
-        'created_at'   => now(),
-        'updated_at'   => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
     ]);
 }
 
@@ -28,18 +28,18 @@ function seedBarangay(string $name = 'canelar', float $lat = 6.9100, float $lng 
 function seedMetrics(string $taskType = 'train'): void
 {
     DB::table('analytics_metrics')->insert([
-        'task_type'     => $taskType,
-        'table_name'    => 'spatial_data',
+        'task_type' => $taskType,
+        'table_name' => 'spatial_data',
         'target_column' => 'value',
-        'r2_score'      => 0.8843,
-        'mse_score'     => 487.9306,
-        'results_json'  => json_encode([
+        'r2_score' => 0.8843,
+        'mse_score' => 487.9306,
+        'results_json' => json_encode([
             'geospatial_regression' => [
-                'formula'    => 'Risk = 14193.60 + (-1035.97 * Lat) + (-57.10 * Lng)',
+                'formula' => 'Risk = 14193.60 + (-1035.97 * Lat) + (-57.10 * Lng)',
                 'coefficients' => ['intercept' => 14193.60, 'latitude' => -1035.97, 'longitude' => -57.10],
             ],
             'data_mining' => [
-                'method'    => 'Kernel Density Estimation (KDE)',
+                'method' => 'Kernel Density Estimation (KDE)',
                 'bandwidth' => 0.01,
             ],
         ]),
@@ -58,7 +58,7 @@ describe('GET /api/v1/spatial-data', function () {
         $response = $this->getJson('/api/v1/spatial-data');
 
         $response->assertOk()
-                 ->assertJsonCount(0);
+            ->assertJsonCount(0);
     });
 
     it('returns all spatial data records ordered by recorded_at desc', function () {
@@ -70,7 +70,7 @@ describe('GET /api/v1/spatial-data', function () {
         $response = $this->getJson('/api/v1/spatial-data');
 
         $response->assertOk()
-                 ->assertJsonCount(2);
+            ->assertJsonCount(2);
 
         // Most recent first – latitude is returned as numeric or string depending on driver
         $lat = $response->json('0.latitude');
@@ -79,12 +79,12 @@ describe('GET /api/v1/spatial-data', function () {
 
     it('handles db errors gracefully', function () {
         // Force a schema issue by dropping the table temporarily – use mocking instead
-        DB::shouldReceive('table')->andThrow(new \Exception('Connection failed'));
+        DB::shouldReceive('table')->andThrow(new Exception('Connection failed'));
 
         $response = $this->getJson('/api/v1/spatial-data');
 
         $response->assertStatus(500)
-                 ->assertJsonStructure(['error']);
+            ->assertJsonStructure(['error']);
     })->skip('Requires DB mock – enable when running isolated');
 
 });
@@ -103,7 +103,7 @@ describe('POST /api/v1/spatial-data (uploadData)', function () {
         $response = $this->postJson('/api/v1/spatial-data/upload', []);
 
         $response->assertStatus(422)
-                 ->assertJsonStructure(['error']);
+            ->assertJsonStructure(['error']);
     });
 
     it('fails with 422 when data is not an array', function () {
@@ -125,25 +125,25 @@ describe('POST /api/v1/spatial-data (uploadData)', function () {
         $payload = [
             'data' => [
                 [
-                    'lat'           => 6.9100,
-                    'lng'           => 122.0700,
-                    'incidentType'  => 'Robbery',
-                    'offense'       => 'Theft',
+                    'lat' => 6.9100,
+                    'lng' => 122.0700,
+                    'incidentType' => 'Robbery',
+                    'offense' => 'Theft',
                     'dateCommitted' => '2025-01-15',
                     'timeCommitted' => '14:30:00',
-                    'value'         => 1.0,
+                    'value' => 1.0,
                 ],
             ],
-            'task'           => 'train',
-            'target_column'  => 'value',
+            'task' => 'train',
+            'target_column' => 'value',
             'feature_columns' => 'latitude,longitude',
         ];
 
         $response = $this->postJson('/api/v1/spatial-data/upload', $payload);
 
         $response->assertOk()
-                 ->assertJson(['success' => true])
-                 ->assertJsonStructure(['success', 'message']);
+            ->assertJson(['success' => true])
+            ->assertJsonStructure(['success', 'message']);
 
         $this->assertDatabaseCount('spatial_data', 1);
         $this->assertDatabaseHas('spatial_data', [
@@ -176,7 +176,7 @@ describe('POST /api/v1/spatial-data (uploadData)', function () {
             'data' => [
                 ['lat' => 6.91, 'lng' => 122.07, 'value' => 1.0],
             ],
-            'task'          => 'forecast',
+            'task' => 'forecast',
             'target_column' => 'value',
         ];
 
@@ -187,8 +187,8 @@ describe('POST /api/v1/spatial-data (uploadData)', function () {
 
     it('bulk inserts multiple records in one request', function () {
         $records = array_fill(0, 10, [
-            'lat'   => 6.91,
-            'lng'   => 122.07,
+            'lat' => 6.91,
+            'lng' => 122.07,
             'value' => 1.0,
         ]);
 
@@ -241,14 +241,14 @@ describe('POST /api/v1/spatial-data/upload-file (uploadFile)', function () {
     });
 
     it('rejects unsupported file extensions', function () {
-        $file = UploadedFile::fake()->create('data.xlsx', 100, 'application/vnd.ms-excel');
+        $file = UploadedFile::fake()->create('data.pdf', 100, 'application/pdf');
 
         $response = $this->post('/api/v1/spatial-data/upload-file', ['file' => $file], [
             'Accept' => 'application/json',
         ]);
 
         $response->assertStatus(400)
-                 ->assertJsonStructure(['error']);
+            ->assertJsonStructure(['error']);
     });
 
     it('accepts and parses a valid JSON file', function () {
@@ -265,7 +265,7 @@ describe('POST /api/v1/spatial-data/upload-file (uploadFile)', function () {
         ], ['Accept' => 'application/json']);
 
         $response->assertOk()
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
 
         $this->assertDatabaseCount('spatial_data', 2);
         Queue::assertPushed(RunAnalyticsJob::class);
@@ -282,7 +282,7 @@ describe('POST /api/v1/spatial-data/upload-file (uploadFile)', function () {
         ], ['Accept' => 'application/json']);
 
         $response->assertOk()
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
 
         $this->assertDatabaseCount('spatial_data', 2);
     });
@@ -295,7 +295,7 @@ describe('POST /api/v1/spatial-data/upload-file (uploadFile)', function () {
         ], ['Accept' => 'application/json']);
 
         $response->assertStatus(422)
-                 ->assertJsonStructure(['error']);
+            ->assertJsonStructure(['error']);
     });
 
     it('returns 422 when JSON is not an array of records', function () {
@@ -322,8 +322,8 @@ describe('POST /api/v1/spatial-data/upload-file (uploadFile)', function () {
         $response->assertOk();
 
         $this->assertDatabaseHas('spatial_data', [
-            'barangay'  => 'canelar',
-            'latitude'  => 6.9100,
+            'barangay' => 'canelar',
+            'latitude' => 6.9100,
             'longitude' => 122.0700,
         ]);
     });
@@ -345,7 +345,7 @@ describe('DELETE /api/v1/spatial-data/clear', function () {
         $response = $this->deleteJson('/api/v1/spatial-data/clear');
 
         $response->assertOk()
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
 
         $this->assertDatabaseCount('spatial_data', 0);
     });
@@ -354,7 +354,7 @@ describe('DELETE /api/v1/spatial-data/clear', function () {
         $response = $this->deleteJson('/api/v1/spatial-data/clear');
 
         $response->assertOk()
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
     });
 
 });
@@ -373,12 +373,12 @@ describe('POST /api/v1/analytics/trigger', function () {
         $response = $this->postJson('/api/v1/analytics/trigger', []);
 
         $response->assertStatus(422)
-                 ->assertJsonStructure(['error']);
+            ->assertJsonStructure(['error']);
     });
 
     it('returns 422 when task is invalid', function () {
         $response = $this->postJson('/api/v1/analytics/trigger', [
-            'task'          => 'invalid',
+            'task' => 'invalid',
             'target_column' => 'value',
         ]);
 
@@ -387,37 +387,37 @@ describe('POST /api/v1/analytics/trigger', function () {
 
     it('dispatches train job with correct options', function () {
         $response = $this->postJson('/api/v1/analytics/trigger', [
-            'task'            => 'train',
-            'target_column'   => 'value',
+            'task' => 'train',
+            'target_column' => 'value',
             'feature_columns' => 'latitude,longitude',
         ]);
 
         $response->assertOk()
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
 
         Queue::assertPushed(RunAnalyticsJob::class);
     });
 
     it('dispatches forecast job', function () {
         $response = $this->postJson('/api/v1/analytics/trigger', [
-            'task'          => 'forecast',
+            'task' => 'forecast',
             'target_column' => 'value',
         ]);
 
         $response->assertOk()
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
 
         Queue::assertPushed(RunAnalyticsJob::class);
     });
 
     it('response message mentions the dispatched task type', function () {
         $response = $this->postJson('/api/v1/analytics/trigger', [
-            'task'          => 'train',
+            'task' => 'train',
             'target_column' => 'value',
         ]);
 
         $response->assertOk()
-                 ->assertJsonPath('message', fn ($msg) => str_contains($msg, 'train'));
+            ->assertJsonPath('message', fn ($msg) => str_contains($msg, 'train'));
     });
 
 });
@@ -432,9 +432,9 @@ describe('GET /api/v1/analytics/metrics', function () {
         $response = $this->getJson('/api/v1/analytics/metrics');
 
         $response->assertOk()
-                 ->assertJsonStructure(['training', 'forecast'])
-                 ->assertJsonPath('training', null)
-                 ->assertJsonPath('forecast', null);
+            ->assertJsonStructure(['training', 'forecast'])
+            ->assertJsonPath('training', null)
+            ->assertJsonPath('forecast', null);
     });
 
     it('returns the latest training metrics', function () {
@@ -443,10 +443,10 @@ describe('GET /api/v1/analytics/metrics', function () {
         $response = $this->getJson('/api/v1/analytics/metrics');
 
         $response->assertOk()
-                 ->assertJsonPath('training.task_type', 'train');
+            ->assertJsonPath('training.task_type', 'train');
 
         // r2/mse returned as string or float depending on DB driver; cast for comparison
-        $r2  = (float) $response->json('training.r2_score');
+        $r2 = (float) $response->json('training.r2_score');
         $mse = (float) $response->json('training.mse_score');
         expect($r2)->toBeGreaterThan(0.88)->and($r2)->toBeLessThan(0.89);
         expect($mse)->toBeGreaterThan(487)->and($mse)->toBeLessThan(488);
@@ -458,7 +458,7 @@ describe('GET /api/v1/analytics/metrics', function () {
         $response = $this->getJson('/api/v1/analytics/metrics');
 
         $response->assertOk()
-                 ->assertJsonPath('forecast.task_type', 'forecast');
+            ->assertJsonPath('forecast.task_type', 'forecast');
     });
 
     it('returns both training and forecast metrics simultaneously', function () {
@@ -468,22 +468,22 @@ describe('GET /api/v1/analytics/metrics', function () {
         $response = $this->getJson('/api/v1/analytics/metrics');
 
         $response->assertOk()
-                 ->assertJsonPath('training.task_type', 'train')
-                 ->assertJsonPath('forecast.task_type', 'forecast');
+            ->assertJsonPath('training.task_type', 'train')
+            ->assertJsonPath('forecast.task_type', 'forecast');
     });
 
     it('returns only the most recent training record when multiple exist', function () {
         seedMetrics('train');
 
         DB::table('analytics_metrics')->insert([
-            'task_type'     => 'train',
-            'table_name'    => 'spatial_data',
+            'task_type' => 'train',
+            'table_name' => 'spatial_data',
             'target_column' => 'value',
-            'r2_score'      => 0.9500,
-            'mse_score'     => 200.0000,
-            'results_json'  => null,
-            'created_at'    => now()->addMinute(),
-            'updated_at'    => now()->addMinute(),
+            'r2_score' => 0.9500,
+            'mse_score' => 200.0000,
+            'results_json' => null,
+            'created_at' => now()->addMinute(),
+            'updated_at' => now()->addMinute(),
         ]);
 
         $response = $this->getJson('/api/v1/analytics/metrics');
@@ -509,15 +509,15 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'status' => 'Active',
             'police_station' => 'PS 07',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->getJson('/api/v1/officers');
 
         $response->assertOk()
-                 ->assertJsonCount(1)
-                 ->assertJsonPath('0.badge_number', 'PCG-2024001')
-                 ->assertJsonPath('0.full_name', 'Juan Cruz');
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.badge_number', 'PCG-2024001')
+            ->assertJsonPath('0.full_name', 'Juan Cruz');
     });
 
     it('returns all alerts', function () {
@@ -529,15 +529,15 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'barangay' => 'Tetuan',
             'acknowledged' => true,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->getJson('/api/v1/alerts');
 
         $response->assertOk()
-                 ->assertJsonCount(1)
-                 ->assertJsonPath('0.type', 'Spike')
-                 ->assertJsonPath('0.title', 'Theft Spike in Tetuan');
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.type', 'Spike')
+            ->assertJsonPath('0.title', 'Theft Spike in Tetuan');
     });
 
     it('generates predictive staff reduction alerts', function () {
@@ -549,7 +549,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'centroid_lat' => 6.9602,
             'centroid_lng' => 121.9680,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         // 2. Seed 10 incidents for Ayala in the previous month (which is >= 5 incidents limit)
@@ -561,7 +561,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'recorded_at' => $recordedAt,
                 'value' => 1.0,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ];
         }
         DB::table('spatial_data')->insert($incidents);
@@ -577,7 +577,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'status' => 'Active',
                 'shift' => 'Day',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'badge_number' => 'PCG-1000002',
@@ -587,16 +587,16 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'status' => 'On-Leave',
                 'shift' => 'Evening',
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ]);
 
         // Triggering alert generation by posting to upload
         $payload = [
             'data' => [
-                ['barangay' => 'Ayala', 'value' => 1.0, 'dateCommitted' => now()->format('Y-m-d')]
+                ['barangay' => 'Ayala', 'value' => 1.0, 'dateCommitted' => now()->format('Y-m-d')],
             ],
-            'task' => 'train'
+            'task' => 'train',
         ];
 
         $response = $this->postJson('/api/v1/spatial-data/upload', $payload);
@@ -608,7 +608,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'barangay' => 'AYALA',
             'severity' => 'HIGH',
         ]);
-        
+
         $alert = DB::table('alerts')->where('type', 'Predictive')->where('barangay', 'AYALA')->first();
         expect($alert->title)->toContain('Staff Reduction in AYALA');
         expect($alert->message)->toContain('Active patrol staff in Barangay Ayala has been reduced to 1 (Previous: 2)');
@@ -625,7 +625,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'centroid_lat' => 6.9602,
             'centroid_lng' => 121.9680,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         // 2. Seed 10 incidents in previous month and 10 incidents in current month (stagnant)
@@ -636,14 +636,14 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'recorded_at' => now()->subMonth(),
                 'value' => 1.0,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ];
             $incidents[] = [
                 'barangay' => 'StagnantZone',
                 'recorded_at' => now(),
                 'value' => 1.0,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ];
         }
         DB::table('spatial_data')->insert($incidents);
@@ -658,15 +658,15 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'status' => 'Active',
                 'shift' => 'Day',
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ]);
 
         $payload = [
             'data' => [
-                ['barangay' => 'StagnantZone', 'value' => 1.0, 'dateCommitted' => now()->format('Y-m-d')]
+                ['barangay' => 'StagnantZone', 'value' => 1.0, 'dateCommitted' => now()->format('Y-m-d')],
             ],
-            'task' => 'train'
+            'task' => 'train',
         ];
 
         $response = $this->postJson('/api/v1/spatial-data/upload', $payload);
@@ -678,7 +678,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'barangay' => 'STAGNANTZONE',
             'severity' => 'HIGH',
         ]);
-        
+
         $alert = DB::table('alerts')->where('type', 'Predictive')->where('barangay', 'STAGNANTZONE')->first();
         expect($alert->title)->toContain('Stagnant Incidents in STAGNANTZONE');
         expect($alert->message)->toContain('stagnant incident volume');
@@ -695,15 +695,15 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'centroid_lat' => 6.9602,
                 'centroid_lng' => 121.9680,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'name' => 'UnderstaffedZone',
                 'centroid_lat' => 6.9100,
                 'centroid_lng' => 122.0700,
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ]);
 
         // 2. Seed 0 incidents for OverstaffedZone in previous month
@@ -715,7 +715,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'recorded_at' => now()->subMonth(),
                 'value' => 1.0,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ];
         }
         DB::table('spatial_data')->insert($incidents);
@@ -731,7 +731,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'status' => 'Active',
                 'shift' => 'Day',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'badge_number' => 'PCG-3000002',
@@ -741,7 +741,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'status' => 'Active',
                 'shift' => 'Evening',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'badge_number' => 'PCG-3000003',
@@ -751,15 +751,15 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
                 'status' => 'Active',
                 'shift' => 'Night',
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ]);
 
         $payload = [
             'data' => [
-                ['barangay' => 'OverstaffedZone', 'value' => 1.0, 'dateCommitted' => now()->format('Y-m-d')]
+                ['barangay' => 'OverstaffedZone', 'value' => 1.0, 'dateCommitted' => now()->format('Y-m-d')],
             ],
-            'task' => 'train'
+            'task' => 'train',
         ];
 
         $response = $this->postJson('/api/v1/spatial-data/upload', $payload);
@@ -771,7 +771,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'barangay' => 'OVERSTAFFEDZONE',
             'severity' => 'MEDIUM',
         ]);
-        
+
         $alert = DB::table('alerts')->where('type', 'Predictive')->where('barangay', 'OVERSTAFFEDZONE')->first();
         expect($alert->title)->toContain('Resource Optimization in OVERSTAFFEDZONE');
         expect($alert->message)->toContain('Resource mismatch detected');
@@ -787,19 +787,19 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'barangay' => 'Tetuan',
             'acknowledged' => false,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->postJson("/api/v1/alerts/{$id}/acknowledge", [
-            'user' => 'ZCPO Chief of Police'
+            'user' => 'ZCPO Chief of Police',
         ]);
 
         $response->assertOk()
-                 ->assertJsonPath('success', true);
+            ->assertJsonPath('success', true);
 
         $alert = DB::table('alerts')->where('id', $id)->first();
-        expect((bool)$alert->acknowledged)->toBeTrue()
-             ->and($alert->acknowledged_by)->toBe('ZCPO Chief of Police');
+        expect((bool) $alert->acknowledged)->toBeTrue()
+            ->and($alert->acknowledged_by)->toBe('ZCPO Chief of Police');
     });
 
     it('returns aggregated barangay incident statistics', function () {
@@ -808,22 +808,22 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'centroid_lat' => 6.9602,
             'centroid_lng' => 121.9680,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         DB::table('spatial_data')->insert([
             'barangay' => 'Ayala',
             'recorded_at' => '2026-01-15 10:00:00',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->getJson('/api/v1/barangays?year=2026');
 
         $response->assertOk()
-                 ->assertJsonCount(1)
-                 ->assertJsonPath('0.name', 'Ayala')
-                 ->assertJsonPath('0.incidents', 1);
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.name', 'Ayala')
+            ->assertJsonPath('0.incidents', 1);
     });
 
     it('returns rich analytics data package', function () {
@@ -832,19 +832,19 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'recorded_at' => '2026-01-15 10:00:00',
             'incident_type' => 'Theft',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->getJson('/api/v1/analytics?year=2026');
 
         $response->assertOk()
-                 ->assertJsonStructure([
-                     'crimeTypes',
-                     'hourly',
-                     'monthly' => ['labels', 'actual', 'forecast'],
-                     'associationRules',
-                     'regression'
-                 ]);
+            ->assertJsonStructure([
+                'crimeTypes',
+                'hourly',
+                'monthly' => ['labels', 'actual', 'forecast'],
+                'associationRules',
+                'regression',
+            ]);
     });
 
     it('returns top 5 incident spatial clusters', function () {
@@ -853,7 +853,7 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'centroid_lat' => 6.9602,
             'centroid_lng' => 121.9680,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         DB::table('spatial_data')->insert([
@@ -861,15 +861,15 @@ describe('New API Aggregation and Officer/Alert Endpoints', function () {
             'recorded_at' => '2026-01-15 10:00:00',
             'incident_type' => 'Theft',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         $response = $this->getJson('/api/v1/clusters?year=2026');
 
         $response->assertOk()
-                 ->assertJsonCount(1)
-                 ->assertJsonPath('0.core', 'Ayala')
-                 ->assertJsonPath('0.crime', 'Theft');
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.core', 'Ayala')
+            ->assertJsonPath('0.crime', 'Theft');
     });
 
 });

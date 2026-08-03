@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
                 'role' => 'decision_maker',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         DB::table('users')->insert($users);

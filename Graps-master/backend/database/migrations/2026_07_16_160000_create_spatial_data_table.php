@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -22,14 +22,14 @@ return new class extends Migration
             $table->string('pro')->nullable();
             $table->string('ppo')->nullable();
             $table->string('stn')->nullable();
-            
+
             // Location divisions
             $table->string('region')->nullable();
             $table->string('province')->nullable();
             $table->string('municipal')->nullable();
             $table->string('barangay')->nullable();
             $table->bigInteger('barangay_id')->nullable(); // Resolved during ingestion
-            
+
             // Temporal indicators
             $table->string('monthly_cycle')->nullable(); // Maps to 'MONHTLY'
             $table->date('date_reported')->nullable();
@@ -37,19 +37,19 @@ return new class extends Migration
             $table->date('date_committed')->nullable();
             $table->time('time_committed')->nullable();
             $table->timestamp('recorded_at')->nullable(); // Integrated date/time committed for queries
-            
+
             // Incident details
             $table->string('incident_type')->nullable(); // Maps to 'incidentType'
             $table->boolean('is_crime')->default(true); // Maps to 'iscime'
             $table->string('stage_of_felony')->nullable(); // Maps to 'stageoffelony'
             $table->text('offense')->nullable();
             $table->string('offense_type')->nullable(); // Maps to 'offenseType'
-            
+
             // Geographic Coordinates
             $table->decimal('latitude', 10, 8)->nullable(); // Maps to 'lat'
             $table->decimal('longitude', 11, 8)->nullable(); // Maps to 'lng'
             $table->decimal('value', 12, 4)->nullable(); // Numeric weight for ML density analysis
-            
+
             $table->timestamps();
 
             // Indexing strategy

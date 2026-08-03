@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class RunAnalytics extends Command
 {
@@ -37,8 +36,9 @@ class RunAnalytics extends Command
         $task = $this->option('task');
         $table = $this->option('table');
 
-        if (!$task || !$table) {
+        if (! $task || ! $table) {
             $this->error('The --task and --table options are required.');
+
             return 1;
         }
 
@@ -46,8 +46,9 @@ class RunAnalytics extends Command
         $pythonPath = env('PYTHON_PATH', 'python3');
         $scriptPath = base_path('../analytics/main.py');
 
-        if (!file_exists($scriptPath)) {
+        if (! file_exists($scriptPath)) {
             $this->error("Python script not found at: {$scriptPath}");
+
             return 1;
         }
 
@@ -57,8 +58,9 @@ class RunAnalytics extends Command
             $target = $this->option('target');
             $features = $this->option('features');
 
-            if (!$target || !$features) {
+            if (! $target || ! $features) {
                 $this->error('The --target and --features options are required for the train task.');
+
                 return 1;
             }
 
@@ -75,8 +77,9 @@ class RunAnalytics extends Command
             $dateCol = $this->option('date-col');
             $steps = $this->option('steps');
 
-            if (!$valueCol || !$dateCol) {
+            if (! $valueCol || ! $dateCol) {
                 $this->error('The --value-col and --date-col options are required for the forecast task.');
+
                 return 1;
             }
 
@@ -88,7 +91,7 @@ class RunAnalytics extends Command
             $command[] = $steps;
         }
 
-        $this->info('Running command: ' . implode(' ', $command));
+        $this->info('Running command: '.implode(' ', $command));
 
         $process = new Process($command);
         $process->setTimeout(300); // 5 minutes timeout
@@ -106,7 +109,7 @@ class RunAnalytics extends Command
                 env('DB_PORT', '5432'),
                 env('DB_DATABASE'),
                 $sslMode
-            )
+            ),
         ]);
 
         $this->output->write('Processing...');
@@ -115,12 +118,14 @@ class RunAnalytics extends Command
             $this->output->write($buffer);
         });
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             $this->error("\nPython Analytics engine execution failed.");
+
             return 1;
         }
 
         $this->info("\nAnalytics task completed successfully.");
+
         return 0;
     }
 }
