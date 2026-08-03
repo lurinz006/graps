@@ -8,6 +8,7 @@ import OfficerDeployment from './components/OfficerDeployment';
 import RecommendationsPanel from './components/RecommendationsPanel';
 import RichAnalyticsPage from './components/RichAnalyticsPage';
 import SettingsPanel from './components/SettingsPanel';
+import GrapsLogo from './components/GrapsLogo';
 import {
   Layers,
   MapPin,
@@ -30,7 +31,10 @@ import {
   BarChart3,
   Star,
   Sun,
-  Moon
+  Moon,
+  Eye,
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 
 const INITIAL_POINTS = [];
@@ -39,7 +43,7 @@ const INITIAL_POINTS = [];
 const normalizeBarangayName = (name) => {
   if (!name || name === 'Unassigned' || name === 'N/A') return '';
   const cleaned = name.trim().toLowerCase();
-  
+
   if (cleaned === 'zone 1' || cleaned === 'zone i' || cleaned === 'barangay zone 1' || cleaned === 'barangay zone i' || cleaned === 'brgy zone 1' || cleaned === 'brgy zone i' || cleaned === 'barangay zone i (pob.)' || cleaned === 'zone i (pob.)') return 'Barangay Zone I';
   if (cleaned === 'zone 2' || cleaned === 'zone ii' || cleaned === 'barangay zone 2' || cleaned === 'barangay zone ii' || cleaned === 'brgy zone 2' || cleaned === 'brgy zone ii' || cleaned === 'barangay zone ii (pob.)' || cleaned === 'zone ii (pob.)') return 'Barangay Zone II';
   if (cleaned === 'zone 3' || cleaned === 'zone iii' || cleaned === 'barangay zone 3' || cleaned === 'barangay zone iii' || cleaned === 'brgy zone 3' || cleaned === 'brgy zone iii' || cleaned === 'barangay zone iii (pob.)' || cleaned === 'zone iii (pob.)') return 'Barangay Zone III';
@@ -435,7 +439,11 @@ export default function App() {
   });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [authToast, setAuthToast] = useState(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   // Load incidents from local PostgreSQL DB on mount (with auto-reconnect)
   const loadPointsFromDB = (isRetry = false) => {
@@ -596,18 +604,32 @@ export default function App() {
     setLoginError('');
 
     let loggedInUser = null;
-    // Check credentials matching seeded UserSeeder roles
-    if (email === 'admin@graps.gov' && password === 'password') {
+    // Check credentials matching seeded UserSeeder roles (or custom passwords set in UI)
+    const adminPass = localStorage.getItem('graps_admin_pass') || 'password';
+    const analystPass = localStorage.getItem('graps_analyst_pass') || 'password';
+    const chiefPass = localStorage.getItem('graps_decision_maker_pass') || 'password';
+
+    if (email === 'admin@graps.gov' && password === adminPass) {
       loggedInUser = { name: 'ZCPO Administrator', email, role: 'admin' };
-    } else if (email === 'analyst@graps.gov' && password === 'password') {
+    } else if (email === 'analyst@graps.gov' && password === analystPass) {
       loggedInUser = { name: 'ZCPO Intelligence Analyst', email, role: 'analyst' };
-    } else if (email === 'chief@graps.gov' && password === 'password') {
+    } else if (email === 'chief@graps.gov' && password === chiefPass) {
       loggedInUser = { name: 'ZCPO Chief of Police', email, role: 'decision_maker' };
     }
 
     if (loggedInUser) {
-      setUser(loggedInUser);
-      localStorage.setItem('graps_user', JSON.stringify(loggedInUser));
+      setIsAuthenticating(true);
+      setTimeout(() => {
+        setIsAuthenticating(false);
+        setLoginSuccess(true);
+        setTimeout(() => {
+          setUser(loggedInUser);
+          localStorage.setItem('graps_user', JSON.stringify(loggedInUser));
+          setAuthToast(`Authentication Successful. Welcome, ${loggedInUser.name}!`);
+          setLoginSuccess(false);
+          setTimeout(() => setAuthToast(null), 3000);
+        }, 400);
+      }, 800);
     } else {
       setLoginError('Invalid email or password. Check the guides for seeded roles.');
     }
@@ -624,8 +646,18 @@ export default function App() {
     }
 
     if (loggedInUser) {
-      setUser(loggedInUser);
-      localStorage.setItem('graps_user', JSON.stringify(loggedInUser));
+      setIsAuthenticating(true);
+      setTimeout(() => {
+        setIsAuthenticating(false);
+        setLoginSuccess(true);
+        setTimeout(() => {
+          setUser(loggedInUser);
+          localStorage.setItem('graps_user', JSON.stringify(loggedInUser));
+          setAuthToast(`Authentication Successful. Welcome, ${loggedInUser.name}!`);
+          setLoginSuccess(false);
+          setTimeout(() => setAuthToast(null), 3000);
+        }, 400);
+      }, 800);
     }
   };
 
@@ -706,12 +738,9 @@ export default function App() {
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-600 via-sky-400 to-violet-500"></div>
 
           <div className="flex flex-col items-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-sky-400 flex items-center justify-center text-slate-950 shadow-lg shadow-brand-500/20 mb-3">
-              <Compass size={26} className="stroke-[2.5]" />
+            <div className="h-16 mb-6">
+              <GrapsLogo />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-brand-300 bg-clip-text text-transparent">
-              GRAPS Portal Login
-            </h1>
             <p className="text-xs text-slate-500 text-center mt-1">
               Geospatial Real-time Analytics & Prediction System
             </p>
@@ -732,14 +761,23 @@ export default function App() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-brand-500 rounded-xl px-4 py-3 pr-12 text-sm text-slate-100 placeholder-slate-600 outline-none transition-all"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -750,9 +788,28 @@ export default function App() {
 
             <button
               type="submit"
-              className="w-full bg-brand-600 hover:bg-brand-500 text-slate-50 font-semibold text-sm rounded-xl py-3 shadow-lg shadow-brand-500/15 hover:shadow-brand-500/25 transition-all mt-6"
+              disabled={isAuthenticating || loginSuccess}
+              className={`w-full text-slate-50 font-semibold text-sm rounded-xl py-3 shadow-lg transition-all mt-6 flex items-center justify-center gap-2 ${
+                isAuthenticating 
+                  ? 'bg-brand-500/80 cursor-wait shadow-none' 
+                  : loginSuccess
+                  ? 'bg-emerald-500 shadow-emerald-500/25'
+                  : 'bg-brand-600 hover:bg-brand-500 shadow-brand-500/15 hover:shadow-brand-500/25'
+              }`}
             >
-              Sign In
+              {isAuthenticating ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  Authenticating...
+                </>
+              ) : loginSuccess ? (
+                <>
+                  <Shield size={18} />
+                  Login Successful!
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 
@@ -834,8 +891,8 @@ export default function App() {
           {isSidebarCollapsed ? (
             /* Collapsed State: Vertical stack */
             <div className="p-4 border-b border-slate-800 flex flex-col items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-sky-400 flex items-center justify-center text-slate-950 shadow-md shrink-0">
-                <Compass size={18} className="stroke-[2.5]" />
+              <div className="w-8 h-8 shrink-0">
+                <GrapsLogo />
               </div>
 
               {/* Collapse Arrow Button below the logo */}
@@ -850,16 +907,8 @@ export default function App() {
             /* Expanded State: Horizontal layout */
             <div className="p-4 h-16 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3 overflow-hidden">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-sky-400 flex items-center justify-center text-slate-950 shadow-md shrink-0">
-                  <Compass size={18} className="stroke-[2.5]" />
-                </div>
-                <div className="truncate">
-                  <h1 className="text-md font-bold tracking-tight bg-gradient-to-r from-slate-100 to-brand-300 bg-clip-text text-transparent">
-                    GRAPS
-                  </h1>
-                  <p className="text-[8px] text-slate-500 font-semibold uppercase tracking-wider">
-                    ZCPO Analytics
-                  </p>
+                <div className="h-8 flex-1 mr-2">
+                  <GrapsLogo className="object-left" />
                 </div>
               </div>
 
@@ -1614,6 +1663,13 @@ export default function App() {
         </div>
       )}
 
+      {/* Floating Success Toast notification */}
+      {authToast && (
+        <div className="fixed bottom-6 right-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-450 px-5 py-3.5 rounded-xl shadow-2xl z-50 animate-[fadeInUp_0.3s_ease] backdrop-blur-md flex items-center gap-2.5 text-xs font-semibold">
+          <Shield size={16} />
+          {authToast}
+        </div>
+      )}
     </div>
   );
 }

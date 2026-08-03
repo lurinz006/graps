@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Shield, User, Key, Database, Sliders, Eye, RefreshCw, Bell, UserPlus } from 'lucide-react';
+import { Settings, Shield, User, Key, Database, Sliders, Eye, EyeOff, RefreshCw, Bell, UserPlus } from 'lucide-react';
 
 export default function SettingsPanel({
   user,
@@ -23,6 +23,9 @@ export default function SettingsPanel({
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Preference states
   const [refreshInterval, setRefreshInterval] = useState('none');
@@ -54,15 +57,51 @@ export default function SettingsPanel({
 
   const handlePasswordReset = (e) => {
     e.preventDefault();
+    
+    const roleKeyMap = {
+      'admin': 'graps_admin_pass',
+      'analyst': 'graps_analyst_pass',
+      'decision_maker': 'graps_decision_maker_pass'
+    };
+    
+    const storedPassKey = roleKeyMap[user?.role];
+    const actualCurrentPass = localStorage.getItem(storedPassKey) || 'password';
+    
+    if (currentPassword !== actualCurrentPass) {
+      triggerToast("⚠️ Incorrect current password!");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       triggerToast("⚠️ Passwords do not match!");
       return;
     }
+    
+    // Save new password
+    localStorage.setItem(storedPassKey, newPassword);
+    
     triggerToast("Password credentials changed successfully.");
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
   };
+
+  const evaluatePasswordStrength = (pass) => {
+    if (!pass) return null;
+    let strength = 0;
+    if (pass.length >= 6) strength += 1;
+    if (pass.length >= 10) strength += 1;
+    if (/[A-Z]/.test(pass)) strength += 1;
+    if (/[a-z]/.test(pass)) strength += 1;
+    if (/[0-9]/.test(pass)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) strength += 1;
+    
+    if (strength <= 2) return { label: 'Weak', color: 'bg-rose-500', textColor: 'text-rose-450', width: '33%' };
+    if (strength <= 4) return { label: 'Moderate', color: 'bg-yellow-500', textColor: 'text-yellow-450', width: '66%' };
+    return { label: 'Strong', color: 'bg-emerald-500', textColor: 'text-emerald-450', width: '100%' };
+  };
+
+  const passStrength = evaluatePasswordStrength(newPassword);
 
   const isAdmin = user?.role === 'admin';
   const isAnalyst = user?.role === 'analyst';
@@ -324,39 +363,76 @@ export default function SettingsPanel({
               <form onSubmit={handlePasswordReset} className="space-y-4">
                 <div>
                   <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Current Password</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter current password..."
-                    className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-650 outline-none"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password..."
+                      className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-4 py-2.5 pr-10 text-xs text-slate-100 placeholder-slate-650 outline-none"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none cursor-pointer"
+                    >
+                      {showCurrentPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">New Password</label>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password..."
-                      className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-650 outline-none"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password..."
+                        className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-4 py-2.5 pr-10 text-xs text-slate-100 placeholder-slate-650 outline-none"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none cursor-pointer"
+                      >
+                        {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                    {newPassword && passStrength && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex-1 h-1 bg-slate-850 rounded-full overflow-hidden">
+                          <div className={`h-full ${passStrength.color} transition-all duration-300`} style={{ width: passStrength.width }}></div>
+                        </div>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${passStrength.textColor}`}>
+                          {passStrength.label}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Confirm New Password</label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password..."
-                      className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-650 outline-none"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password..."
+                        className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-4 py-2.5 pr-10 text-xs text-slate-100 placeholder-slate-650 outline-none"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none cursor-pointer"
+                      >
+                        {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
