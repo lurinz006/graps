@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Map, { Marker, Popup, NavigationControl, Source, Layer, useMap } from 'react-map-gl/mapbox';
-import { MapPin, AlertCircle, Info, Maximize2, X, Trash2, Calendar, Clock } from 'lucide-react';
+import { MapPin, AlertCircle, Info, Maximize2, X, Trash2, Calendar, Clock, Globe, PersonStanding } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Default initial viewport – centered on Zamboanga City.
@@ -103,7 +103,7 @@ function FitAllButton({ points }) {
     <button
       onClick={handleFit}
       title="Fit map to show all data points"
-      className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 bg-slate-900/95 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-semibold rounded-xl shadow-lg hover:bg-slate-800 hover:border-brand-500/60 transition-all duration-200"
+      className="flex items-center gap-1.5 px-3 py-2 bg-slate-900/95 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-semibold rounded-xl shadow-lg hover:bg-slate-800 hover:border-brand-500/60 transition-all duration-200"
     >
       <Maximize2 size={13} className="text-brand-400" />
       Fit All ({points.length})
@@ -117,6 +117,9 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [pendingClickCoords, setPendingClickCoords] = useState(null);
   const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '';
+  const [isSatellite, setIsSatellite] = useState(false);
+  const [isStreetViewMode, setIsStreetViewMode] = useState(false);
+  const [streetViewCoords, setStreetViewCoords] = useState(null);
 
   // Form states for adding incident via map click
   const [isAddMode, setIsAddMode] = useState(false);
@@ -260,6 +263,28 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
 
   const handleMapClick = (event) => {
     const { features, lngLat } = event;
+
+    if (lngLat && onAddPoint && isAddMode) {
+      setPendingClickCoords({ lng: lngLat.lng, lat: lngLat.lat });
+      return;
+    }
+
+    if (lngLat && isStreetViewMode) {
+      // If they clicked a point, use the point's coords, otherwise use the click coords
+      let targetCoords = { lng: lngLat.lng, lat: lngLat.lat };
+      const clickedFeature = features?.find(f => f.layer.id === 'points-layer');
+      if (clickedFeature?.properties?.id) {
+        const point = points.find(p => p.id == clickedFeature.properties.id);
+        if (point) {
+          targetCoords = { lng: parseFloat(point.longitude), lat: parseFloat(point.latitude) };
+        }
+      }
+      
+      setStreetViewCoords(targetCoords);
+      setIsStreetViewMode(false); // Turn off mode after clicking
+      return;
+    }
+
     if (features && features.length > 0) {
       const clickedFeature = features.find(f => f.layer.id === 'points-layer');
       if (clickedFeature && clickedFeature.properties && clickedFeature.properties.id) {
@@ -274,6 +299,13 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
 
     if (lngLat && onAddPoint && isAddMode) {
       setPendingClickCoords({ lng: lngLat.lng, lat: lngLat.lat });
+      return;
+    }
+
+    if (lngLat && isStreetViewMode) {
+      setStreetViewCoords({ lng: lngLat.lng, lat: lngLat.lat });
+      setIsStreetViewMode(false); // Turn off mode after clicking
+      return;
     }
   };
 
@@ -336,10 +368,10 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
             setShowPins(isZoomed);
           }
         }}
-        mapStyle={theme === 'light' ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11"}
+        mapStyle={isSatellite ? "mapbox://styles/mapbox/satellite-streets-v12" : (theme === 'light' ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11")}
         onClick={handleMapClick}
         interactiveLayerIds={['points-layer']}
-        cursor="crosshair"
+        cursor={isStreetViewMode ? 'crosshair' : 'grab'}
       // ⚠️ No maxBounds, minZoom, or maxZoom – map is fully pannable worldwide
       >
         <NavigationControl position="top-right" />
@@ -347,20 +379,43 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
         {/* Auto-fit viewport to all loaded points on first render / data load */}
         <AutoFitter points={validPoints} focusLocation={focusLocation} barangayList={barangayList} />
 
-        {/* Fit All button – top-left corner */}
-        <FitAllButton points={validPoints} />
+        {/* Controls Container */}
+        <div className="absolute top-4 left-4 z-10 flex gap-2 flex-wrap max-w-[75%]">
+          {/* Fit All button */}
+          <FitAllButton points={validPoints} />
 
-        {/* Toggle Add Mode Button */}
-        {onAddPoint && (
+          {/* Toggle Add Mode Button */}
+          {onAddPoint && (
+            <button
+              onClick={() => setIsAddMode(!isAddMode)}
+              title="Toggle Add Incident Mode"
+              className={`flex items-center gap-1.5 px-3 py-2 bg-slate-900/95 backdrop-blur-md border text-xs font-semibold rounded-xl shadow-lg transition-all duration-200 ${isAddMode ? 'border-brand-500 text-brand-400 bg-slate-800' : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800 hover:border-slate-600'}`}
+            >
+              <MapPin size={13} />
+              {isAddMode ? 'Add Mode: ON' : 'Add Mode: OFF'}
+            </button>
+          )}
+
+          {/* Toggle Satellite View Button */}
           <button
-            onClick={() => setIsAddMode(!isAddMode)}
-            title="Toggle Add Incident Mode"
-            className={`absolute top-4 left-[140px] z-10 flex items-center gap-1.5 px-3 py-2 bg-slate-900/95 backdrop-blur-md border text-xs font-semibold rounded-xl shadow-lg transition-all duration-200 ${isAddMode ? 'border-brand-500 text-brand-400 bg-slate-800' : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800 hover:border-slate-600'}`}
+            onClick={() => setIsSatellite(!isSatellite)}
+            title="Toggle Satellite View"
+            className={`flex items-center gap-1.5 px-3 py-2 bg-slate-900/95 backdrop-blur-md border text-xs font-semibold rounded-xl shadow-lg transition-all duration-200 ${isSatellite ? 'border-brand-500 text-brand-400 bg-slate-800' : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800 hover:border-slate-600'}`}
           >
-            <MapPin size={13} />
-            {isAddMode ? 'Add Mode: ON' : 'Add Mode: OFF'}
+            <Globe size={13} />
+            {isSatellite ? 'Map View' : 'Satellite'}
           </button>
-        )}
+
+          {/* Toggle Street View Mode Button */}
+          <button
+            onClick={() => setIsStreetViewMode(!isStreetViewMode)}
+            title="Toggle Street View Mode"
+            className={`flex items-center gap-1.5 px-3 py-2 bg-slate-900/95 backdrop-blur-md border text-xs font-semibold rounded-xl shadow-lg transition-all duration-200 ${isStreetViewMode ? 'border-brand-500 text-brand-400 bg-slate-800' : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800 hover:border-slate-600'}`}
+          >
+            <PersonStanding size={13} />
+            {isStreetViewMode ? 'Click Map for Street View' : 'Street View'}
+          </button>
+        </div>
 
         {/* GPU-accelerated heatmap and points */}
         {validPoints.length > 0 && (
@@ -431,6 +486,72 @@ export default function MapContainer({ points = [], onAddPoint, onDeletePoint, b
           </p>
         </div>
       </div>
+      
+      {/* 🗺️ STREET VIEW MODAL */}
+      {streetViewCoords && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-2 md:p-6">
+          <div className="w-full h-full max-w-6xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
+            <div className="flex items-center justify-between p-4 bg-slate-950 border-b border-slate-800 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-400 flex items-center justify-center shrink-0">
+                  <PersonStanding size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100">Google Street View</h3>
+                  <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                    Lat: {streetViewCoords.lat.toFixed(6)}, Lng: {streetViewCoords.lng.toFixed(6)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${streetViewCoords.lat},${streetViewCoords.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden md:flex items-center gap-1.5 bg-brand-600 hover:bg-brand-500 text-slate-50 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  <Globe size={14} /> Open in Google Maps Tab
+                </a>
+                <button
+                  onClick={() => setStreetViewCoords(null)}
+                  className="text-slate-400 hover:text-slate-200 p-2 hover:bg-slate-800 rounded-xl transition-colors"
+                  title="Close Street View"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 w-full h-full relative bg-slate-950 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0">
+                <PersonStanding size={48} className="text-slate-700 mb-4" />
+                <h4 className="text-slate-300 font-semibold mb-2">Loading Street View...</h4>
+                <p className="text-slate-500 text-xs max-w-md leading-relaxed mb-6">
+                  If the screen remains grey or says "No Street View Available", it means this exact coordinate is off the road or has no Google coverage.
+                </p>
+                <a
+                  href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${streetViewCoords.lat},${streetViewCoords.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
+                >
+                  <Globe size={14} /> Find Nearest Street View on Google Maps
+                </a>
+              </div>
+              <iframe
+                src={`https://maps.google.com/maps?q=&layer=c&cbll=${streetViewCoords.lat},${streetViewCoords.lng}&cbp=11,0,0,0,0&output=svembed`}
+                width="100%"
+                height="100%"
+                style={{ border: 0, position: 'relative', zIndex: 10 }}
+                allowFullScreen
+                loading="lazy"
+                title="Google Street View"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 📍 ADD INCIDENT MAP CLICK FORM MODAL */}
       {pendingClickCoords && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
