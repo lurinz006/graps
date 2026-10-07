@@ -1,6 +1,7 @@
 # GRAPS Project Architecture & Setup Guide
 
-Welcome to the **Geospatial Real-time Analytics & Prediction System (GRAPS)**. This project implements a three-tier architecture: React + Tailwind CSS + Mapbox GL JS on the frontend, PHP-Laravel handling APIs and background queues, and a Python Engine using Pandas, Scikit-learn, and Statsmodels for analytics, all integrated around a **local PostgreSQL database with PostGIS spatial extensions**.
+ This project implements a three-tier architecture: React + Tailwind CSS + Mapbox GL JS on the frontend, PHP-Laravel handling APIs and background queues, and a Python Engine using Pandas, Scikit-learn, and Statsmodels for analytics, all integrated around a
+  ## local PostgreSQL database with PostGIS spatial extensions.
 
 ---
 
@@ -63,12 +64,12 @@ GRAPS/
 
 To configure your system and execute the application, please follow the documentation index:
 
-👉 **[requirements.md](requirements.md)**
+## [requirements.md](requirements.md)
 
 This index routes you through:
-1. **[INSTALL_PREREQUISITES.md](INSTALL_PREREQUISITES.md)**: Installing PHP, PostGIS, Node.js, Python, and PostgreSQL on your host operating system.
-2. **[CLONE_AND_SETUP.md](CLONE_AND_SETUP.md)**: Configuring the cloned workspace, package installs, and database initializations.
-3. **[how_to_run.md](how_to_run.md)**: Launching backend servers, frontend dev environments, and running test suites.
+1. ## [INSTALL_PREREQUISITES.md](INSTALL_PREREQUISITES.md): Installing PHP, PostGIS, Node.js, Python, and PostgreSQL on your host operating system.
+2. ## [CLONE_AND_SETUP.md](CLONE_AND_SETUP.md): Configuring the cloned workspace, package installs, and database initializations.
+3. ## [how_to_run.md](how_to_run.md): Launching backend servers, frontend dev environments, and running test suites.
 
 ---
 
@@ -77,11 +78,11 @@ The Laravel server triggers the Python script using a background command.
 
 ### Manual CLI Run
 You can also run tasks manually using the Artisan console wrapper:
-- **Train regression model on spatial table**:
+- ## Train regression model on spatial table:
   ```bash
   php artisan app:run-analytics --task=train --table=spatial_data --target=value --features=latitude,longitude
   ```
-- **Forecast next 7 steps on spatial table**:
+- ## Forecast next 7 steps on spatial table:
   ```bash
   php artisan app:run-analytics --task=forecast --table=spatial_data --value-col=value --date-col=recorded_at --steps=7
   ```

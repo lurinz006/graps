@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ShieldCheck, Printer, Check, Star, AlertCircle, Cpu, Clock, Tag } from 'lucide-react';
 
 export default function RecommendationsPanel({ points, onNavigateToTab }) {
-  const [filterPriority, setFilterPriority] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('ALL');
   const [implementedRecos, setImplementedRecos] = useState(new Set());
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -217,7 +217,7 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
   };
 
   // Filter recommendations
-  const filteredRecos = filterPriority === 'all'
+  const filteredRecos = filterPriority === 'ALL'
     ? allRecommendations
     : allRecommendations.filter(r => r.priority === filterPriority);
 
@@ -279,7 +279,7 @@ export default function RecommendationsPanel({ points, onNavigateToTab }) {
           <AlertCircle size={14} className="text-slate-500" /> Filter Directives
         </div>
         <div className="flex gap-2">
-          {['all', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(p => (
+          {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(p => (
             <button
               key={p}
               onClick={() => setFilterPriority(p)}

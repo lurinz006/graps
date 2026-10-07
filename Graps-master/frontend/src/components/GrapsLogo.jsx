@@ -3,7 +3,7 @@ import React from 'react';
 export default function GrapsLogo({ className = "" }) {
   return (
     <svg 
-      viewBox="0 0 240 60" 
+      viewBox="0 0 320 60" 
       className={`w-full h-full object-contain ${className}`} 
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -21,7 +21,7 @@ export default function GrapsLogo({ className = "" }) {
         </style>
       </defs>
       <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle" className="logo-text" fontSize="46">
-        GRAPS
+        G-CRAPS
       </text>
     </svg>
   );
