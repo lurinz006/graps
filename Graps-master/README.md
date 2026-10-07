@@ -1,4 +1,4 @@
-# GRAPS Project Architecture & Setup Guide
+# G CRAPS Project Architecture & Setup Guide
 
  This project implements a three-tier architecture: React + Tailwind CSS + Mapbox GL JS on the frontend, PHP-Laravel handling APIs and background queues, and a Python Engine using Pandas, Scikit-learn, and Statsmodels for analytics, all integrated around a
   ## local PostgreSQL database with PostGIS spatial extensions.
