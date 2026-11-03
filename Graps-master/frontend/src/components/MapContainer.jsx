@@ -44,43 +44,53 @@ function AutoFitter({ points, focusLocation, barangayList = [] }) {
   useEffect(() => {
     if (!grapsMap) return;
 
-    if (focusLocation) {
-      const bPoints = points.filter(p =>
-        (p.barangay || p.name || '').toLowerCase().includes(focusLocation.toLowerCase()) ||
-        (p.description || '').toLowerCase().includes(focusLocation.toLowerCase())
-      );
+    const timer = setTimeout(() => {
+      try {
+        grapsMap.resize();
+      } catch (e) {}
 
-      if (bPoints.length > 0) {
-        const bounds = getBounds(bPoints);
-        if (bounds) {
-          grapsMap.fitBounds(bounds, { padding: 80, duration: 1200, maxZoom: 15 });
+      if (focusLocation) {
+        const cleanFocus = focusLocation.trim().toLowerCase();
+
+        // 1. Precise centroid flyTo if found in barangayList
+        const brgy = barangayList.find(b => (b.name || '').trim().toLowerCase() === cleanFocus) ||
+                     barangayList.find(b => (b.name || '').toLowerCase().includes(cleanFocus));
+        if (brgy && brgy.lat && brgy.lng) {
+          grapsMap.flyTo({
+            center: [parseFloat(brgy.lng), parseFloat(brgy.lat)],
+            zoom: 14.5,
+            duration: 1200,
+            essential: true
+          });
           return;
         }
-      } else {
-        // Fallback: look up barangay coordinates from barangayList
-        const brgy = barangayList.find(b => (b.name || '').toLowerCase() === focusLocation.toLowerCase());
-        if (brgy && brgy.lat && brgy.lng) {
-          const lat = parseFloat(brgy.lat);
-          const lng = parseFloat(brgy.lng);
-          const pad = 0.01;
-          const bounds = [
-            [lng - pad, lat - pad],
-            [lng + pad, lat + pad]
-          ];
-          grapsMap.fitBounds(bounds, { padding: 80, duration: 1200, maxZoom: 15 });
-          return;
+
+        // 2. Try points matching focusLocation
+        const bPoints = points.filter(p =>
+          (p.barangay || p.name || '').toLowerCase().includes(cleanFocus) ||
+          (p.description || '').toLowerCase().includes(cleanFocus)
+        );
+
+        if (bPoints.length > 0) {
+          const bounds = getBounds(bPoints);
+          if (bounds) {
+            grapsMap.fitBounds(bounds, { padding: 80, duration: 1200, maxZoom: 15 });
+            return;
+          }
         }
       }
-    }
 
-    const bounds = getBounds(points);
-    if (!bounds) return;
+      const bounds = getBounds(points);
+      if (!bounds) return;
 
-    grapsMap.fitBounds(bounds, {
-      padding: 60,
-      duration: 900,
-      maxZoom: 14
-    });
+      grapsMap.fitBounds(bounds, {
+        padding: 60,
+        duration: 900,
+        maxZoom: 14
+      });
+    }, 120);
+
+    return () => clearTimeout(timer);
   }, [grapsMap, points, focusLocation, barangayList]);
 
   return null;

@@ -75,7 +75,12 @@ export default function App() {
     setActiveTabRaw(tab);
     localStorage.setItem('graps_activeTab', tab);
     if (typeof targetFocus === 'string') {
-      setMapFocus(targetFocus);
+      const cleanTarget = targetFocus.trim();
+      setMapFocus(cleanTarget);
+      if (tab === 'map' && cleanTarget.toUpperCase() !== 'ALL SECTORS' && cleanTarget.toUpperCase() !== 'ALL') {
+        setFilterBarangay(cleanTarget);
+        setDraftBarangay(cleanTarget);
+      }
     } else {
       setMapFocus(null);
     }
@@ -735,14 +740,14 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center font-sans p-6">
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-600 via-sky-400 to-violet-500"></div>
+
 
           <div className="flex flex-col items-center mb-8">
             <div className="h-16 mb-6">
               <GrapsLogo />
             </div>
             <p className="text-xs text-slate-500 text-center mt-1">
-              Geospatial Real-time Analytics & Prediction System
+              Geospatial Regression Analytics of Public Safety
             </p>
           </div>
 
@@ -1615,7 +1620,7 @@ export default function App() {
                     <div>
                       <h3 className="text-sm font-bold text-slate-200">Access Restricted</h3>
                       <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
-                        Data ingestion is locked under role-based policies. Please log in as the **Administrator** (`admin@graps.gov`) to upload raw incident files.
+                        Data ingestion is locked under role-based policies. Please log in as the <strong className="text-slate-300 font-semibold">Administrator</strong> (admin@graps.gov) to upload raw incident files.
                       </p>
                     </div>
                   </div>

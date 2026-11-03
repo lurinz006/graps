@@ -455,7 +455,16 @@ export default function AlertsManager({ user, onAlertsCountChanged, onNavigateTo
                           Resolve
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); onNavigateToTab('map', a.barangay); }}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            // If alert suggests redeploying to a specific target sector, focus that target (e.g. AYALA)
+                            let target = a.barangay;
+                            const match = a.message && a.message.match(/redeploy \d+ officer\(s\) to ([A-Za-z\s]+?)(?:\s*\(|$)/i);
+                            if (match && match[1]) {
+                              target = match[1].trim();
+                            }
+                            onNavigateToTab('map', target); 
+                          }}
                           className="text-[10px] font-bold text-slate-455 hover:text-slate-300 uppercase tracking-wider whitespace-nowrap cursor-pointer"
                         >
                           Map View
