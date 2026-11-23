@@ -1,13 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  ShieldCheck, Printer, Check, Star, AlertCircle, Cpu, Clock, Tag, 
-  FileText, Plus, CheckCircle, XCircle, Edit3, Send, ShieldAlert, Sparkles, X, ChevronRight, UserCheck
+  ShieldCheck, Printer, Check, AlertCircle, Cpu, Clock, Tag, 
+  FileText, Plus, CheckCircle, XCircle, Edit3, Send, ShieldAlert, X, UserCheck
 } from 'lucide-react';
 
 export default function RecommendationsPanel({ points = [], user, onNavigateToTab }) {
   const isAnalyst = user?.role === 'analyst';
   const isChief = user?.role === 'decision_maker';
-  const isAdmin = user?.role === 'admin';
 
   const [filterPriority, setFilterPriority] = useState('ALL');
   const [implementedRecos, setImplementedRecos] = useState(() => {

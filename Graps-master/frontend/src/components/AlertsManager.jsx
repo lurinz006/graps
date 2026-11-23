@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, ShieldCheck, CheckCircle2, RefreshCw, Filter, Sliders, Bell, Compass, Calendar, Sparkles, X, ShieldAlert, Building, Users } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, CheckCircle2, RefreshCw, Filter, Sliders, Bell, Compass, Calendar, Sparkles, X, ShieldAlert, Building } from 'lucide-react';
 
 const BARANGAY_STATION_MAP = {
   'Vitali': 'PS 01', 'Tagasilay': 'PS 01', 'Tictapul': 'PS 01', 'Licomo': 'PS 01', 'Mangusu': 'PS 01', 'Sibulao': 'PS 01', 'Tigbalabag': 'PS 01',
@@ -30,8 +30,6 @@ const getStationForBarangay = (brgy) => {
 
 export default function AlertsManager({ user, onAlertsCountChanged, onNavigateToTab }) {
   const isChief = user?.role === 'decision_maker';
-  const isAnalyst = user?.role === 'analyst';
-  const isAdmin = user?.role === 'admin';
 
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);

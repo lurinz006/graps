@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Shield, Users, AlertOctagon, Activity, Download, Search, CheckCircle, X, Edit2, Trash2, Upload, Lock, Unlock, ShieldAlert } from 'lucide-react';
+import { Shield, Users, AlertOctagon, Activity, Download, Search, CheckCircle, X, Edit2, Trash2, Upload, Lock, Unlock } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 export default function OfficerDeployment({ user, filterYear, filterMonth }) {
   const isChief = user?.role === 'decision_maker';
   const isAnalyst = user?.role === 'analyst';
-  const isAdmin = user?.role === 'admin';
 
   const [isRosterLocked, setIsRosterLocked] = useState(() => {
     return localStorage.getItem('graps_officer_roster_locked') === 'true';

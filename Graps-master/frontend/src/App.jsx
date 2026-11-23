@@ -851,7 +851,6 @@ export default function App() {
 
   // 2. DASHBOARD VIEW DEFINITIONS
   const isAdmin = user.role === 'admin';
-  const isAnalyst = user.role === 'analyst';
   const isChief = user.role === 'decision_maker';
   const renderModularTabContent = () => {
     switch (activeTab) {
