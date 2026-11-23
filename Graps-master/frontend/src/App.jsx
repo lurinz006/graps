@@ -1058,8 +1058,12 @@ export default function App() {
             ) : (
               <>
                 <span className="block text-xs font-bold text-slate-200 truncate">{user.name}</span>
-                <span className="inline-block text-[8px] font-bold px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/25 mt-1 uppercase tracking-wider">
-                  {user.role === 'admin' ? 'Administrator' : user.role === 'analyst' ? 'Analyst' : 'Chief of Police'}
+                <span className={`inline-block text-[8px] font-bold px-1.5 py-0.5 rounded border mt-1 uppercase tracking-wider ${
+                  user.role === 'decision_maker' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' :
+                  user.role === 'analyst' ? 'bg-brand-500/15 text-brand-400 border-brand-500/30' :
+                  'bg-slate-800 text-slate-300 border-slate-700'
+                }`}>
+                  {user.role === 'decision_maker' ? 'Chief of Police • Command' : user.role === 'analyst' ? 'Intelligence Analyst' : 'IT Administrator'}
                 </span>
               </>
             )}
