@@ -1,8 +1,26 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Shield, Users, AlertOctagon, Activity, Download, Search, CheckCircle, X, Edit2, Trash2, Upload } from 'lucide-react';
+import { Shield, Users, AlertOctagon, Activity, Download, Search, CheckCircle, X, Edit2, Trash2, Upload, Lock, Unlock } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 export default function OfficerDeployment({ user, filterYear, filterMonth }) {
+  const isChief = user?.role === 'decision_maker';
+  const isAnalyst = user?.role === 'analyst';
+
+  const [isRosterLocked, setIsRosterLocked] = useState(() => {
+    return localStorage.getItem('graps_officer_roster_locked') === 'true';
+  });
+
+  const toggleRosterLock = () => {
+    if (!isChief) {
+      showToast("Command Authority Restricted: Only Chief of Police can lock/unlock the roster.");
+      return;
+    }
+    const next = !isRosterLocked;
+    setIsRosterLocked(next);
+    localStorage.setItem('graps_officer_roster_locked', String(next));
+    showToast(next ? "🔒 Duty Roster locked by Chief of Police." : "🔓 Duty Roster unlocked for modifications.");
+  };
+
   const [officers, setOfficers] = useState([]);
   const [barangays, setBarangays] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -548,16 +566,45 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-100 tracking-tight">Officer Deployment Matrix</h2>
-          <p className="text-xs text-slate-500">Tactical staffing grids and station patrol efficiency audits</p>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold text-slate-100 tracking-tight">Officer Deployment Matrix</h2>
+            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
+              isChief ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+              isAnalyst ? 'bg-brand-500/10 text-brand-400 border-brand-500/20' :
+              'bg-slate-800 text-slate-400 border-slate-700'
+            }`}>
+              {isChief ? 'Executive Command' : isAnalyst ? 'Intelligence Audit' : 'IT System Audit'}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">Tactical staffing grids and station patrol efficiency audits</p>
         </div>
-        <button
-          onClick={handleExportCSV}
-          disabled={deploymentList.length === 0}
-          className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 disabled:text-slate-650 disabled:bg-slate-950/20 disabled:border-slate-900 disabled:cursor-not-allowed transition-all cursor-pointer"
-        >
-          <Download size={14} /> Export CSV
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          {isChief ? (
+            <button
+              onClick={toggleRosterLock}
+              className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                isRosterLocked
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/25 hover:bg-rose-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/20'
+              }`}
+            >
+              {isRosterLocked ? <><Lock size={14} /> Roster Locked (Chief)</> : <><Unlock size={14} /> Lock Roster</>}
+            </button>
+          ) : isRosterLocked ? (
+            <span className="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/25 px-3.5 py-2 rounded-xl text-xs font-bold">
+              <Lock size={13} /> Roster Locked by Chief
+            </span>
+          ) : null}
+
+          <button
+            onClick={handleExportCSV}
+            disabled={deploymentList.length === 0}
+            className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 disabled:text-slate-650 disabled:bg-slate-950/20 disabled:border-slate-900 disabled:cursor-not-allowed transition-all cursor-pointer"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Toast Notification */}
@@ -973,13 +1020,13 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
       {deploymentTab === 'roster' && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
 
-          {/* Admin Tools: Hire Officer Form */}
-          {user?.role === 'admin' && (
+          {/* Chief Tools: Register / Enlist Officer Form */}
+          {isChief && !isRosterLocked && (
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-200">Register / Hire Patrol Officers</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Enlist active personnel into duty rosters manually or via CSV upload</p>
+                  <h3 className="text-sm font-semibold text-slate-200">Register / Enlist Patrol Personnel</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Enlist active personnel into station duty rosters manually or via CSV upload</p>
                 </div>
                 <div>
                   <input
@@ -1104,7 +1151,7 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
                     <th className="py-2.5 px-3">Barangay Sector</th>
                     <th className="py-2.5 px-3 text-center">Shift Schedule</th>
                     <th className="py-2.5 px-3 text-center">Duty Status</th>
-                    {user?.role === 'admin' && <th className="py-2.5 px-3 text-right">Action</th>}
+                    {isChief && <th className="py-2.5 px-3 text-right">{isRosterLocked ? 'Status' : 'Action'}</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-850/40 text-slate-350 bg-slate-900/50">
@@ -1116,7 +1163,7 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
                         <td className="py-2.5 px-3 text-slate-400">{off.rank}</td>
                         <td className="py-2.5 px-3 text-slate-300 font-medium">{off.assigned_barangay || 'Unassigned'}</td>
                         <td className="py-2.5 px-3 text-center">
-                          {user?.role === 'admin' ? (
+                          {isChief && !isRosterLocked ? (
                             <button
                               type="button"
                               onClick={() => handleUpdateShift(off.id, off.shift)}
@@ -1131,7 +1178,7 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          {user?.role === 'admin' ? (
+                          {isChief && !isRosterLocked ? (
                             <button
                               type="button"
                               onClick={() => handleUpdateStatus(off.id, off.status)}
@@ -1151,31 +1198,37 @@ export default function OfficerDeployment({ user, filterYear, filterMonth }) {
                             </span>
                           )}
                         </td>
-                        {user?.role === 'admin' && (
+                        {isChief && (
                           <td className="py-2.5 px-3 text-right">
-                            <div className="flex justify-end gap-3 items-center">
-                              <button
-                                type="button"
-                                onClick={() => handleEditClick(off)}
-                                className="text-[10px] font-semibold text-brand-400 hover:text-brand-300 cursor-pointer flex items-center gap-1"
-                              >
-                                <Edit2 size={10} /> Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteClick(off)}
-                                className="text-[10px] font-semibold text-rose-400 hover:text-rose-300 cursor-pointer flex items-center gap-1"
-                              >
-                                <Trash2 size={10} /> Decommission
-                              </button>
-                            </div>
+                            {isRosterLocked ? (
+                              <span className="text-[10px] text-slate-500 flex items-center justify-end gap-1 font-semibold">
+                                <Lock size={10} /> Locked
+                              </span>
+                            ) : (
+                              <div className="flex justify-end gap-3 items-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditClick(off)}
+                                  className="text-[10px] font-semibold text-brand-400 hover:text-brand-300 cursor-pointer flex items-center gap-1"
+                                >
+                                  <Edit2 size={10} /> Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteClick(off)}
+                                  className="text-[10px] font-semibold text-rose-400 hover:text-rose-300 cursor-pointer flex items-center gap-1"
+                                >
+                                  <Trash2 size={10} /> Decommission
+                                </button>
+                              </div>
+                            )}
                           </td>
                         )}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={user?.role === 'admin' ? 7 : 6} className="py-8 text-center text-slate-500 italic">
+                      <td colSpan={isChief ? 7 : 6} className="py-8 text-center text-slate-500 italic">
                         No patrol officers found matching search query.
                       </td>
                     </tr>
