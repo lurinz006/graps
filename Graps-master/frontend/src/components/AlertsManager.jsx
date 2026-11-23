@@ -1,7 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, ShieldCheck, CheckCircle2, RefreshCw, Filter, Sliders, Bell, Compass, Calendar, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, CheckCircle2, RefreshCw, Filter, Sliders, Bell, Compass, Calendar, Sparkles, X, ShieldAlert, Building, Users } from 'lucide-react';
+
+const BARANGAY_STATION_MAP = {
+  'Vitali': 'PS 01', 'Tagasilay': 'PS 01', 'Tictapul': 'PS 01', 'Licomo': 'PS 01', 'Mangusu': 'PS 01', 'Sibulao': 'PS 01', 'Tigbalabag': 'PS 01',
+  'Manicahan': 'PS 02', 'Lamisahan': 'PS 02', 'Cacao': 'PS 02', 'Calabasa': 'PS 02', 'Victoria': 'PS 02',
+  'Sangali': 'PS 03', 'Bolong': 'PS 03', 'Bunguiao': 'PS 03', 'Dulian (Upper Bunguiao)': 'PS 03', 'Panubigan': 'PS 03', 'Quiniput': 'PS 03', 'Lapakan': 'PS 03',
+  'Culianan': 'PS 04', 'Pasobolong': 'PS 04', 'Mercedes': 'PS 04', 'Guisao': 'PS 04', 'Cabaluay': 'PS 04', 'Talabaan': 'PS 04', 'Landang Gua': 'PS 04', 'Landang Laum': 'PS 04', 'Pangapuyan': 'PS 04', 'Muti': 'PS 04', 'Kasanyangan': 'PS 06',
+  'Divisoria': 'PS 05', 'Lunzuran': 'PS 05', 'Putik': 'PS 05', 'Boalan': 'PS 05', 'Lumayang': 'PS 05', 'Dulian (Upper Pasonanca)': 'PS 05',
+  'Tetuan': 'PS 06', 'Canelar': 'PS 06', 'Guiwan': 'PS 06', 'Mampang': 'PS 06', 'Tugbungan': 'PS 06',
+  'Santa Maria': 'PS 07', 'Pasonanca': 'PS 07', 'Tumaga': 'PS 07', 'Cabatangan': 'PS 07', 'Dita': 'PS 07', 'Capisan': 'PS 07',
+  'Sinunuc': 'PS 08', 'Calarian': 'PS 08', 'Upper Calarian': 'PS 08', 'Malagutay': 'PS 08', 'Maasin': 'PS 08', 'Pamucutan': 'PS 08', 'Taluksangay': 'PS 08',
+  'Ayala': 'PS 09', 'Talisayan': 'PS 09', 'Recodo': 'PS 09', 'Cawit': 'PS 09', 'Tulungatung': 'PS 09',
+  'Labuan': 'PS 10', 'Sinubung': 'PS 10', 'Patalon': 'PS 10', 'Limpapa': 'PS 10', 'La Paz': 'PS 10', 'Baluno': 'PS 10',
+  'San Jose Gusu': 'PS 11', 'San Roque': 'PS 11', 'San Jose Cawa-cawa': 'PS 11', 'Campo Islam': 'PS 11', 'Baliwasan': 'PS 11',
+  'Talon-talon': 'PS 12', 'Santa Catalina': 'PS 12', 'Sta. Catalina': 'PS 12', 'Camino Nuevo': 'PS 12', 'Santo Niño': 'PS 12', 
+  'Arena Blanco': 'PS 12', 'Rio Hondo': 'PS 12', 'Mariki': 'PS 12', 'Busay': 'PS 12',
+  'Zone 1': 'PS 12', 'Zone 2': 'PS 12', 'Zone 3': 'PS 12', 'Zone 4': 'PS 12',
+  'Zone I': 'PS 12', 'Zone II': 'PS 12', 'Zone III': 'PS 12', 'Zone IV': 'PS 12',
+  'Barangay Zone I': 'PS 12', 'Barangay Zone II': 'PS 12', 'Barangay Zone III': 'PS 12', 'Barangay Zone IV': 'PS 12',
+};
+
+const getStationForBarangay = (brgy) => {
+  if (!brgy) return 'PS 12';
+  const clean = brgy.trim();
+  if (BARANGAY_STATION_MAP[clean]) return BARANGAY_STATION_MAP[clean];
+  const foundKey = Object.keys(BARANGAY_STATION_MAP).find(k => k.toLowerCase() === clean.toLowerCase());
+  return foundKey ? BARANGAY_STATION_MAP[foundKey] : 'PS 12';
+};
 
 export default function AlertsManager({ user, onAlertsCountChanged, onNavigateToTab }) {
+  const isChief = user?.role === 'decision_maker';
+  const isAnalyst = user?.role === 'analyst';
+  const isAdmin = user?.role === 'admin';
+
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState('all');
@@ -448,12 +479,21 @@ export default function AlertsManager({ user, onAlertsCountChanged, onNavigateTo
                       </div>
 
                       <div className="flex flex-col justify-between items-end border-l border-slate-850/50 pl-4 gap-4">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setConfirmModal({ type: 'single', alertId: a.id, alertTitle: a.title }); }}
-                          className="bg-brand-600 hover:bg-brand-500 text-slate-50 font-semibold text-[10px] rounded-lg px-3 py-2 shadow transition-all whitespace-nowrap cursor-pointer"
-                        >
-                          Resolve
-                        </button>
+                        {isChief ? (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setConfirmModal({ type: 'single', alertId: a.id, alertTitle: a.title }); }}
+                            className="bg-brand-600 hover:bg-brand-500 text-slate-50 font-semibold text-[10px] rounded-lg px-3 py-2 shadow transition-all whitespace-nowrap cursor-pointer"
+                          >
+                            Resolve
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setSelectedAlert(a); }}
+                            className="bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold text-[10px] rounded-lg px-3 py-2 shadow transition-all whitespace-nowrap cursor-pointer"
+                          >
+                            Audit
+                          </button>
+                        )}
                         <button 
                           onClick={(e) => { 
                             e.stopPropagation(); 
@@ -775,67 +815,133 @@ export default function AlertsManager({ user, onAlertsCountChanged, onNavigateTo
               );
             })()}
 
-            {/* 🛠️ QUICK ACTION: SELECT DEPLOYMENT TIME & OFFICER */}
-            <div className="border-t border-slate-850 pt-4 space-y-4">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Deployment Shift / Time</label>
-                  <span className="text-[9px] font-extrabold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded">
-                    Recommended: {selectedAlert.type === 'Patrol' ? 'Evening / Night Shift' : 'Dawn / Night Shift'}
-                  </span>
+            {/* 📍 JURISDICTION & STATION AUDIT */}
+            {(() => {
+              const targetStation = selectedAlert ? getStationForBarangay(selectedAlert.barangay) : 'PS 12';
+              const unassignedActiveOfficers = officers.filter(
+                o => o.status === 'Active' && (!o.assigned_barangay || o.assigned_barangay === 'Unassigned' || o.assigned_barangay === 'N/A' || o.assigned_barangay === '')
+              );
+              const primaryOfficers = unassignedActiveOfficers.filter(o => o.police_station === targetStation);
+              const backupOfficers = unassignedActiveOfficers.filter(o => o.police_station !== targetStation);
+
+              return (
+                <div className="space-y-4">
+                  <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between shadow-inner">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-brand-600/10 text-brand-400 border border-brand-500/20 flex items-center justify-center">
+                        <Building size={18} />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Precinct Jurisdiction</span>
+                        <span className="text-xs font-bold text-slate-100">{targetStation} • Sector: {selectedAlert.barangay || 'City Wide'}</span>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                      primaryOfficers.length > 0 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                        : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    }`}>
+                      {primaryOfficers.length} Local Standby Officer{primaryOfficers.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {/* 🛠️ QUICK ACTION: SELECT DEPLOYMENT TIME & OFFICER */}
+                  <div className="border-t border-slate-850 pt-4 space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Deployment Shift / Time</label>
+                        <span className="text-[9px] font-extrabold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded">
+                          Recommended: {selectedAlert.type === 'Patrol' ? 'Evening / Night Shift' : 'Dawn / Night Shift'}
+                        </span>
+                      </div>
+                      <select
+                        value={deploymentShift}
+                        onChange={(e) => setDeploymentShift(e.target.value)}
+                        disabled={!isChief}
+                        className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 outline-none cursor-pointer disabled:opacity-60"
+                      >
+                        <option value="Morning / Day">☀️ Morning / Day Shift</option>
+                        <option value="Afternoon / Day">☀️ Afternoon / Day Shift</option>
+                        <option value="Evening / Night">🌆 Evening / Night Shift</option>
+                        <option value="Dawn / Night">🌙 Dawn / Night shift</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                          Deploy Officer by Station Jurisdiction
+                        </label>
+                        <span className="text-[9px] text-slate-500">
+                          {targetStation} Officers Prioritized
+                        </span>
+                      </div>
+                      <select
+                        value={deployingOfficerId}
+                        onChange={(e) => setDeployingOfficerId(e.target.value)}
+                        disabled={!isChief}
+                        className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 outline-none cursor-pointer max-w-full truncate disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <option value="">-- Select Standby Officer --</option>
+                        {primaryOfficers.length > 0 && (
+                          <optgroup label={`🎯 Primary Precinct (${targetStation}) - Jurisdiction Officers`}>
+                            {primaryOfficers.map(o => (
+                              <option key={o.id} value={o.id} className="bg-slate-900 text-slate-100">
+                                👮 {o.full_name} ({o.rank} - Standby Shift: {o.shift})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {backupOfficers.length > 0 && (
+                          <optgroup label={`🛡️ Adjacent / Backup Precincts (Secondary Support)`}>
+                            {backupOfficers.map(o => (
+                              <option key={o.id} value={o.id} className="bg-slate-900 text-slate-300">
+                                👮 {o.full_name} ({o.rank} - [{o.police_station}] Standby Shift: {o.shift})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {primaryOfficers.length === 0 && backupOfficers.length === 0 && (
+                          <option value="" disabled>No active standby officers available</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <select
-                  value={deploymentShift}
-                  onChange={(e) => setDeploymentShift(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 outline-none cursor-pointer"
-                >
-                  <option value="Morning / Day">☀️ Morning / Day Shift</option>
-                  <option value="Afternoon / Day">☀️ Afternoon / Day Shift</option>
-                  <option value="Evening / Night">🌆 Evening / Night Shift</option>
-                  <option value="Dawn / Night">🌙 Dawn / Night shift</option>
-                </select>
-              </div>
+              );
+            })()}
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Deploy Available (Unassigned) Officer</label>
-                <select
-                  value={deployingOfficerId}
-                  onChange={(e) => setDeployingOfficerId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-850 focus:border-brand-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 outline-none cursor-pointer max-w-full truncate"
-                >
-                  <option value="">-- Select Free Officer --</option>
-                  {officers
-                    .filter(o => o.status === 'Active' && (!o.assigned_barangay || o.assigned_barangay === 'Unassigned' || o.assigned_barangay === 'N/A' || o.assigned_barangay === ''))
-                    .map(o => (
-                      <option key={o.id} value={o.id} className="bg-slate-900 text-slate-100">
-                        👮 {o.full_name} ({o.rank} - Current Shift: {o.shift})
-                      </option>
-                    ))
-                  }
-                </select>
-              </div>
-            </div>
+            <div className="flex flex-col gap-3 pt-4 border-t border-slate-850">
+              {!isChief && (
+                <div className="flex items-center gap-2.5 text-[11px] text-amber-350 bg-amber-500/10 border border-amber-500/20 px-3.5 py-2.5 rounded-xl">
+                  <ShieldAlert size={16} className="text-amber-400 shrink-0" />
+                  <span><strong>Command Authorization Restricted:</strong> Only the <strong>Chief of Police</strong> holds authority to approve & authorize tactical deployments.</span>
+                </div>
+              )}
 
-            <div className="flex justify-between items-center pt-3 border-t border-slate-850">
-              <button
-                type="button"
-                onClick={() => setSelectedAlert(null)}
-                className="bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer"
-              >
-                Close Audit
-              </button>
-              <button
-                type="button"
-                onClick={handleDeployOfficer}
-                disabled={!deployingOfficerId || deployLoading}
-                className={`font-semibold px-5 py-2.5 text-xs rounded-xl transition-all shadow border text-center ${
-                  !deployingOfficerId || deployLoading
-                    ? 'bg-slate-200 text-slate-800 cursor-not-allowed border-slate-300'
-                    : 'bg-brand-600 hover:bg-brand-500 text-slate-50 cursor-pointer border-transparent'
-                }`}
-              >
-                {deployLoading ? 'Deploying...' : 'Deploy & Resolve'}
-              </button>
+              <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => setSelectedAlert(null)}
+                  className="bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  Close Audit
+                </button>
+                {isChief && (
+                  <button
+                    type="button"
+                    onClick={handleDeployOfficer}
+                    disabled={!deployingOfficerId || deployLoading}
+                    className={`font-semibold px-5 py-2.5 text-xs rounded-xl transition-all shadow border text-center ${
+                      !deployingOfficerId || deployLoading
+                        ? 'bg-slate-200 text-slate-800 cursor-not-allowed border-slate-300'
+                        : 'bg-brand-600 hover:bg-brand-500 text-slate-50 cursor-pointer border-transparent'
+                    }`}
+                  >
+                    {deployLoading ? 'Authorizing...' : 'Authorize & Deploy Officer'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
