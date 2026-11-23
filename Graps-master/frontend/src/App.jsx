@@ -877,7 +877,7 @@ export default function App() {
         return <OfficerDeployment user={user} filterYear={filterYear} filterMonth={filterMonth} />;
 
       case 'recommendations':
-        return <RecommendationsPanel points={points} onNavigateToTab={setActiveTab} />;
+        return <RecommendationsPanel points={points} user={user} onNavigateToTab={setActiveTab} />;
       case 'analytics':
         return <RichAnalyticsPage />;
       default:
